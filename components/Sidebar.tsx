@@ -24,10 +24,10 @@ const Sidebar: React.FC = () => {
       </div>
       <nav className="mt-5">
         <SidebarLink href="/dashboard" icon={<Home size={20} />} text="Home" />
-        <SidebarLink href="/dashboard/upload" icon={<Upload size={20} />} text="Upload Resource" />
-        <SidebarLink href="/dashboard/search" icon={<Search size={20} />} text="Search Resources" />
+        <SidebarLink href="/dashboard/upload-resource" icon={<Upload size={20} />} text="Upload Resource" />
+        <SidebarLink href="/dashboard/search-resources" icon={<Search size={20} />} text="Search Resources" />
         <SidebarLink href="/dashboard/my-resources" icon={<Book size={20} />} text="My Resources" />
-        <SidebarLink href="/dashboard/chat" icon={<MessageCircle size={20} />} text="Chat with PDF" />
+        <SidebarLink href="/dashboard/chat-with-pdf" icon={<MessageCircle size={20} />} text="Chat with PDF" />
       </nav>
     </div>
   );

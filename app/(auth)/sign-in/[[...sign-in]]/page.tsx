@@ -47,7 +47,7 @@ export default function Page() {
             </div>
             {userType === "student" ? (
               <div>
-                <SignIn />
+                <SignIn/>
               </div>
             ) : (
               <div>

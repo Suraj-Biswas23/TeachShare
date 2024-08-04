@@ -1,11 +1,18 @@
+"use client"
+
 import { UserButton } from '@clerk/nextjs'
 import Sidebar from '@/components/Sidebar'
+import { Toaster } from "@/components/ui/toaster"
+import { useSaveUserToDatabase } from '@/hooks/useSaveUserToDatabase'
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+    // Call the hook to save user to database
+    useSaveUserToDatabase();
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
@@ -20,6 +27,8 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+            {/* Add the Toaster component */}
+            <Toaster />
     </div>
   )
 }

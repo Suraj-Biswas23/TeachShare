@@ -53,7 +53,7 @@ export default function UploadForm() {
     const finalCourse = course === 'Other' ? otherCourse : course
     console.log({ title, description, files, course: finalCourse, subject, fileType, tags })
 
-    // Reset form after submission
+    // Reset form after  the submission
     setTitle('')
     setDescription('')
     setFiles([])

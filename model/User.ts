@@ -6,8 +6,7 @@ interface IUser extends Document {
   name: string;
   email: string;
   role: 'student' | 'educator';
-  university: string;
-  department: string;
+  purpose: string;
   bio?: string;
   uploadedMaterials: mongoose.Types.ObjectId[];
   savedMaterials: mongoose.Types.ObjectId[];
@@ -20,6 +19,8 @@ interface IMaterial extends Document {
   fileUrl: string;
   fileType: 'pdf' | 'doc' | 'ppt' | 'video' | 'other';
   subject: string;
+  course: string;  // Dropdown-selected course
+  specificCourse?: string; // Optional field if the course is not available in the dropdown
   tags: string[];
   uploader: mongoose.Types.ObjectId;
   uploadDate: Date;
@@ -48,11 +49,7 @@ const userSchema = new Schema<IUser>({
     enum: ['student', 'educator'],
     required: true
   },
-  university: {
-    type: String,
-    required: true
-  },
-  department: {
+  purpose: {
     type: String,
     required: true
   },
@@ -95,6 +92,14 @@ const materialSchema = new Schema<IMaterial>({
   subject: {
     type: String,
     required: true
+  },
+  course: {
+    type: String,
+    required: true
+  },
+  specificCourse: {
+    type: String,
+    default: null // Optional field if the dropdown doesn't cover the course
   },
   tags: [{
     type: String

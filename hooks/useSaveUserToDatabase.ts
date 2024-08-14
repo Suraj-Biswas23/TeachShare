@@ -74,7 +74,7 @@ export function useSaveUserToDatabase(): SaveStatus {
       toast({
         title: "Registered Successfully",
         description: "Welcome to TeachShare!",
-        duration: 2000,
+        duration: 5000,
       });
     } catch (error) {
       console.error('Error saving user to DB:', error instanceof Error ? error.message : String(error));
@@ -83,7 +83,7 @@ export function useSaveUserToDatabase(): SaveStatus {
         title: "Error",
         description: "Error syncing user data. Please try again.",
         variant: "destructive",
-        duration: 2000,
+        duration: 5000,
       });
     } finally {
       isSavingRef.current = false;

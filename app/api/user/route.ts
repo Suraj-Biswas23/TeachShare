@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   await dbConnect();
 
   try {
-    const { name, email, role, university, department } = await request.json();
+    const { name, email, role, purpose, bio } = await request.json();
 
     let user = await User.findOne({ clerkId: userId });
 
@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
       user.email = email;
       // Optionally update other fields if they're provided
       if (role) user.role = role;
-      if (university) user.university = university;
-      if (department) user.department = department;
+      if (purpose) user.purpose = purpose;
+      if (bio) user.bio = bio;
       await user.save();
     } else {
       // Create new user
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
         name,
         email,
         role: role || 'student',  // Default to 'student' if not provided
-        university: university || '',
-        department: department || '',
+        purpose: purpose || '',
+        bio: bio || '',
       });
       await user.save();
     }

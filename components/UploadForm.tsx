@@ -167,7 +167,7 @@ export default function UploadForm() {
           {
             isDragActive ?
               <p>Drop the files here ...</p> :
-              <p>Drag 'n' drop some files here, or click to select files</p>
+              <p>Drag &apos;n&apos; drop some files here, or click to select files</p>
           }
         </div>
         {errors.files && <p className="text-red-500 text-sm mt-1">{errors.files}</p>}

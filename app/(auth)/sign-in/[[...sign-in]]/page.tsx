@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { SignIn, useAuth } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
@@ -32,7 +32,7 @@ export default function Page() {
           </div>
           <div className="w-2/3 flex flex-col items-center justify-center bg-white p-8">
             <div className="mb-8 flex space-x-4">
-              <Button
+              {/* <Button
                 className={userType === "student" ? "bg-blue-500 text-white" : ""}
                 onClick={() => setUserType("student")}
               >
@@ -43,7 +43,7 @@ export default function Page() {
                 onClick={() => setUserType("educator")}
               >
                 Educator Login
-              </Button>
+              </Button> */}
             </div>
             {userType === "student" ? (
               <div>

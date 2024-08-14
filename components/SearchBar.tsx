@@ -1,12 +1,23 @@
+// components/SearchBar.tsx
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
-export default function SearchBar() {
+interface SearchBarProps {
+  onSearch: (query: string) => void;
+  onSave?: (query: string) => void;
+}
+
+export default function SearchBar({ onSearch, onSave }: SearchBarProps) {
   const [query, setQuery] = useState("");
 
   const handleSearch = () => {
-    // Handle search logic here
-    console.log(query);
+    onSearch(query);
+  };
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave(query);
+    }
   };
 
   return (
@@ -21,6 +32,11 @@ export default function SearchBar() {
       <button onClick={handleSearch} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
         Search
       </button>
+      {onSave && (
+        <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          Save Search
+        </button>
+      )}
     </div>
   );
 }

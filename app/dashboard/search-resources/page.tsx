@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import SearchBar from '@/components/SearchBar';
 import ResourceCard from '@/components/ResourceCard';
 import { FaThList, FaThLarge } from 'react-icons/fa';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 // Assuming we have a way to fetch the courses and subjects from UploadForm
@@ -52,7 +54,7 @@ export default function SearchResourcesPage() {
   });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [savedSearches, setSavedSearches] = useState<string[]>([]);
+  const [savedSearches, setSavedSearches] = useState<string[]>([])
 
   useEffect(() => {
     // Simulating API call with filters and sorting
@@ -89,8 +91,9 @@ export default function SearchResourcesPage() {
   const handleSearch = (query: string) => {
     // Implement search logic here
     console.log('Searching for:', query);
+    toast.info(`Searching for: ${query}`);
   };
-
+  
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
     setPage(1);
@@ -107,7 +110,34 @@ export default function SearchResourcesPage() {
 
   const saveSearch = (query: string) => {
     setSavedSearches(prev => [...prev, query]);
+    toast.success(`Search saved: ${query}`);
   };
+  // Placeholder functions for ResourceCard props
+  const handleEdit = (id: number) => {
+    console.log('Editing resource:', id);
+    toast.info(`Editing resource: ${id}`);
+  };
+
+  const handleDelete = (id: number) => {
+    setResources(resources => resources.filter(r => r.id !== id));
+    toast.success(`Resource ${id} deleted`);
+  };
+
+  const handleArchive = (id: number) => {
+    console.log('Archiving resource:', id);
+    toast.info(`Archiving resource: ${id}`);
+  };
+
+  const handleShare = (id: number) => {
+    console.log('Sharing resource:', id);
+    toast.info(`Sharing resource: ${id}`);
+  };
+
+  const handleDownload = (id: number) => {
+    console.log('Downloading resource:', id);
+    toast.success(`Downloading resource: ${id}`);
+  };
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -195,7 +225,15 @@ export default function SearchResourcesPage() {
 
       <div className={view === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
         {resources.map(resource => (
-          <ResourceCard key={resource.id} resource={resource} />
+          <ResourceCard 
+            key={resource.id} 
+            resource={resource}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onArchive={handleArchive}
+            onShare={handleShare}
+            onDownload={handleDownload}
+          />
         ))}
       </div>
 
@@ -225,6 +263,7 @@ export default function SearchResourcesPage() {
           </ul>
         </div>
       )}
+      <ToastContainer position="bottom-right" />
     </div>
   );
 }

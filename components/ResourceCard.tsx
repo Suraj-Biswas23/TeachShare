@@ -1,6 +1,14 @@
+// components/ResourceCard.tsx
 import { useState } from 'react';
-import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaEllipsisV, FaEdit, FaTrash, FaArchive } from 'react-icons/fa';
+import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaEllipsisV, FaEdit, FaTrash, FaArchive, FaFolderPlus, FaFolderMinus } from 'react-icons/fa';
 import { format } from 'date-fns';
+import { toast } from 'react-toastify';
+
+interface Collection {
+  id: number;
+  name: string;
+  resourceIds: number[];
+}
 
 interface ResourceCardProps {
   resource: {
@@ -20,19 +28,43 @@ interface ResourceCardProps {
     course: string;
     subject: string;
     tags: string[];
+    fileUrl?: string;
   };
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onArchive?: () => void;
-  onShare?: () => void;
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+  onArchive?: (id: number) => void;
+  onShare?: (id: number) => void;
+  onDownload?: (id: number) => void;
+  onAddToCollection?: (resourceId: number, collectionId: number) => void;
+  onRemoveFromCollection?: (resourceId: number, collectionId: number) => void;
+  collections?: Collection[];
 }
 
-export default function ResourceCard({ resource, onEdit, onDelete, onArchive, onShare }: ResourceCardProps) {
+export default function ResourceCard({ 
+  resource, 
+  onEdit, 
+  onDelete, 
+  onArchive, 
+  onShare, 
+  onDownload,
+  onAddToCollection,
+  onRemoveFromCollection,
+  collections = []
+}: ResourceCardProps) {
   const [showActions, setShowActions] = useState(false);
+  const [showCollections, setShowCollections] = useState(false);
+
+  const handleDownload = () => {
+    if (resource.fileUrl) {
+      onDownload && onDownload(resource.id);
+    } else {
+      toast.error("No files found for download.");
+    }
+  };
 
   return (
     <div className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 relative">
-      {/* ... other JSX ... */}
+      <h3 className="text-lg font-semibold mb-2">{resource.title}</h3>
       <div className="text-sm text-gray-600 mb-2">
         <p>By: {resource.author} | {resource.contentType}</p>
         <p>Course: {resource.course} | Subject: {resource.subject}</p>
@@ -65,12 +97,15 @@ export default function ResourceCard({ resource, onEdit, onDelete, onArchive, on
           <FaStar className="text-yellow-400 mr-1" />
           <span>{resource.rating.toFixed(1)} ({resource.reviews} reviews)</span>
         </div>
-        <button className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 transition-colors duration-200">
+        <button 
+          onClick={handleDownload}
+          className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 transition-colors duration-200"
+        >
           Download
         </button>
       </div>
       
-      {(onEdit || onDelete || onArchive || onShare) && (
+      {(onEdit || onDelete || onArchive || onShare || onAddToCollection) && (
         <div className="absolute top-2 right-2">
           <button onClick={() => setShowActions(!showActions)} className="p-1">
             <FaEllipsisV />
@@ -78,25 +113,55 @@ export default function ResourceCard({ resource, onEdit, onDelete, onArchive, on
           {showActions && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
               {onEdit && (
-                <button onClick={onEdit} className="block w-full text-left px-4 py-2 hover:bg-gray-100">
+                <button onClick={() => onEdit(resource.id)} className="block w-full text-left px-4 py-2 hover:bg-gray-100">
                   <FaEdit className="inline mr-2" /> Edit
                 </button>
               )}
               {onDelete && (
-                <button onClick={onDelete} className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500">
+                <button onClick={() => onDelete(resource.id)} className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500">
                   <FaTrash className="inline mr-2" /> Delete
                 </button>
               )}
               {onArchive && (
-                <button onClick={onArchive} className="block w-full text-left px-4 py-2 hover:bg-gray-100">
+                <button onClick={() => onArchive(resource.id)} className="block w-full text-left px-4 py-2 hover:bg-gray-100">
                   <FaArchive className="inline mr-2" /> Archive
                 </button>
               )}
               {onShare && (
-                <button onClick={onShare} className="block w-full text-left px-4 py-2 hover:bg-gray-100">
+                <button onClick={() => onShare(resource.id)} className="block w-full text-left px-4 py-2 hover:bg-gray-100">
                   <FaShare className="inline mr-2" /> Share
                 </button>
               )}
+              {onAddToCollection && (
+                <button onClick={() => setShowCollections(!showCollections)} className="block w-full text-left px-4 py-2 hover:bg-gray-100">
+                  <FaFolderPlus className="inline mr-2" /> Manage Collections
+                </button>
+              )}
+            </div>
+          )}
+          {showCollections && onAddToCollection && onRemoveFromCollection && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+              {collections.map(collection => (
+                <button 
+                  key={collection.id}
+                  onClick={() => {
+                    if (collection.resourceIds.includes(resource.id)) {
+                      onRemoveFromCollection(resource.id, collection.id);
+                    } else {
+                      onAddToCollection(resource.id, collection.id);
+                    }
+                    setShowCollections(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  {collection.resourceIds.includes(resource.id) ? (
+                    <FaFolderMinus className="inline mr-2" />
+                  ) : (
+                    <FaFolderPlus className="inline mr-2" />
+                  )}
+                  {collection.name}
+                </button>
+              ))}
             </div>
           )}
         </div>

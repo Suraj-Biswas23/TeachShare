@@ -162,12 +162,12 @@ export default function UploadForm() {
       </div>
       <div className="mb-4">
         <label className="block mb-2">Files <span className="text-red-500">*</span></label>
-        <div {...getRootProps()} className={`p-6 border-2 border-dashed rounded ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}>
+        <div {...getRootProps()} className={`p-16 border-2 border-dashed rounded ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'} flex justify-center items-center`}>
           <input {...getInputProps()} />
           {
             isDragActive ?
               <p>Drop the files here ...</p> :
-              <p>Drag &apos;n&apos; drop some files here, or click to select files</p>
+              <p>Drag &apos;n&apos; drop  or click to select files</p>
           }
         </div>
         {errors.files && <p className="text-red-500 text-sm mt-1">{errors.files}</p>}

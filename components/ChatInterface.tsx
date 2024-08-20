@@ -1,34 +1,54 @@
-'use client'
 import React, { useState } from 'react'
+import { Send } from 'lucide-react'
+import axios from 'axios'
 
 interface Message {
   role: 'user' | 'ai'
   content: string
 }
 
-export default function ChatInterface() {
+export default function ChatInterface({ textContent }: { textContent: string }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (inputMessage.trim()) {
-      const newMessage: Message = { role: 'user', content: inputMessage }
-      setMessages([...messages, newMessage])
-      // Here you would typically send the message to your AI backend
-      // and then add the AI's response to the chat
-      // For now, we'll just simulate an AI response
-      setTimeout(() => {
-        const aiResponse: Message = { role: 'ai', content: `AI response to: ${inputMessage}` }
-        setMessages(prev => [...prev, aiResponse])
-      }, 1000)
-      setInputMessage('')
+      const newMessage: Message = { role: 'user', content: inputMessage };
+      setMessages([...messages, newMessage]);
+  
+      const apiToken = process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY;
+      console.log('Hugging Face API token:', apiToken);
+  
+      try {
+        const response = await axios.post(
+          'https://api-inference.huggingface.co/models/distilbert-base-uncased-distilled-squad',
+          {
+            inputs: {
+              question: inputMessage,
+              context: textContent,
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${apiToken}`,
+            },
+          }
+        );
+        console.log('Hugging Face API response:', response.data);
+  
+        const aiResponse: Message = { role: 'ai', content: response.data.answer };
+        setMessages((prev) => [...prev, aiResponse]);
+        setInputMessage('');
+      } catch (error) {
+        console.error('Error calling Hugging Face API:', error);
+      }
     }
-  }
+  };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-100 rounded-lg mb-4">
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-4">
         {messages.map((message, index) => (
           <div
             key={index}
@@ -36,7 +56,7 @@ export default function ChatInterface() {
           >
             <span
               className={`inline-block p-2 rounded-lg ${
-                message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
+                message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
               }`}
             >
               {message.content}
@@ -44,20 +64,22 @@ export default function ChatInterface() {
           </div>
         ))}
       </div>
-      <form onSubmit={handleSendMessage} className="flex gap-2">
-        <input
-          type="text"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1 p-2 border rounded-lg"
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-        >
-          Send
-        </button>
+      <form onSubmit={handleSendMessage} className="p-4 border-t">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 p-2 border rounded-lg"
+          />
+          <button
+            type="submit"
+            className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 flex items-center justify-center"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
       </form>
     </div>
   )

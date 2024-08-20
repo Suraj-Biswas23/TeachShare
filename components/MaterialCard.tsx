@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MoreVertical, ThumbsUp, MessageSquare, Bookmark } from 'lucide-react';
+import { MoreVertical, ThumbsUp, MessageSquare, Bookmark, Share2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +11,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { toast } from 'react-toastify';
+// Import the format function from date-fns
+import { format } from 'date-fns';
 
 interface MaterialCardProps {
   material: {
@@ -18,7 +21,11 @@ interface MaterialCardProps {
     title: string;
     preview: string;
     likes: number;
-    bookmarked: boolean;
+    views: number;
+    date: string;
+    format: string;
+    author?: string; // Optional
+    bookmarked?: boolean; // Optional
   };
 }
 
@@ -35,11 +42,13 @@ export default function MaterialCard({ material }: MaterialCardProps) {
 
   const toggleBookmark = () => {
     setBookmarked(!bookmarked);
+    toast.success(bookmarked ? 'Bookmark removed' : 'Bookmark added');
   };
 
   const toggleLike = () => {
     setLiked(!liked);
     setLikes(likes + (liked ? -1 : 1));
+    toast.success(liked ? 'Like removed' : 'Like added');
   };
 
   const handleLogin = () => {
@@ -48,17 +57,32 @@ export default function MaterialCard({ material }: MaterialCardProps) {
     }
   };
 
+  const handleShare = (platform: string) => {
+    // Implement sharing logic here
+    toast.success(`Shared on ${platform}`);
+    setShowShareOptions(false);
+  };
+
+  // Format the date using date-fns to ensure consistency
+  const formattedDate = format(new Date(material.date), 'MM/dd/yyyy');
+
   return (
     <div className="bg-white p-4 shadow-md rounded-lg border">
       <h2 className="text-lg font-semibold mb-2">{material.title}</h2>
       <p className="text-gray-600 mb-4">{material.preview}</p>
+      <div className="text-sm text-gray-500 mb-2">
+        <span>{material.author} • </span>
+        <span>{formattedDate} • </span> {/* Use the consistently formatted date here */}
+        <span>{material.format} • </span>
+        <span>{material.views} views</span>
+      </div>
       <div className="flex items-center justify-between">
         <div className="flex space-x-4">
           <button
             className={`flex items-center ${liked ? 'text-blue-500' : 'text-gray-700'} hover:text-blue-700`}
             onClick={toggleLike}
           >
-            <ThumbsUp size={16} className="mr-1" fill={liked ? '#03adfc' : 'none'} />
+            <ThumbsUp size={16} className="mr-1" />
             {likes}
           </button>
           <button className="flex items-center text-gray-700 hover:text-gray-900">
@@ -97,19 +121,28 @@ export default function MaterialCard({ material }: MaterialCardProps) {
             className="text-gray-700 hover:text-gray-900"
             onClick={() => setShowShareOptions(!showShareOptions)}
           >
-            <MoreVertical size={20} />
+            <Share2 size={20} />
           </button>
           {showShareOptions && (
             <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-              <a href="#" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+              <button 
+                className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
+                onClick={() => handleShare('Facebook')}
+              >
                 Share via Facebook
-              </a>
-              <a href="#" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+              </button>
+              <button 
+                className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
+                onClick={() => handleShare('Twitter')}
+              >
                 Share via Twitter
-              </a>
-              <a href="#" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+              </button>
+              <button 
+                className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
+                onClick={() => handleShare('LinkedIn')}
+              >
                 Share via LinkedIn
-              </a>
+              </button>
             </div>
           )}
         </div>

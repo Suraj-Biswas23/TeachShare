@@ -20,9 +20,13 @@ const upcomingEvents = [
 ];
 
 const topContributors = [
-  { id: 1, name: "Emily Brown", contributions: 156, avatar: "/comavatar1.jpg" },
-  { id: 2, name: "Michael Chen", contributions: 132, avatar: "/comavatar2.jpg" },
-  { id: 3, name: "Sarah Parker", contributions: 118, avatar: "/comavatar3.jpg" },
+  { id: 1, name: "Hrishabh Gautam", contributions: 156, avatar: "/comavatar2.jpg" },
+  { id: 2, name: "Suraj Biswas", contributions: 132, avatar: "/Designer.jpeg" },
+  { id: 3, name: "Jannat Chehal", contributions: 128, avatar: "/aboutavatar1.jpg" },
+  { id: 4, name: "Suhana Devi", contributions: 118, avatar: "/girldp.jpeg" },
+  { id: 5, name: "Kamran khan", contributions: 131, avatar: "/guydp.jpeg" },
+  { id: 6, name: "Neetu Prasad", contributions: 123, avatar: "/aboutavatar3.jpg" },
+
 ];
 
 export default function CommunityPage() {

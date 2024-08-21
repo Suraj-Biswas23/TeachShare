@@ -7,9 +7,8 @@ import Image from "next/image";
 import { FaLinkedin, FaTwitter } from 'react-icons/fa';
 
 const teamMembers = [
-  { name: "Jane Doe", role: "CEO & Founder", image: "/aboutavatar1.jpg", linkedin: "#", twitter: "#" },
-  { name: "John Smith", role: "CTO", image: "/aboutavatar2.jpg", linkedin: "#", twitter: "#" },
-  { name: "Alice Johnson", role: "Head of Education", image: "/aboutavatar3.jpg", linkedin: "#", twitter: "#" },
+  { name: "Hrishabh Gautam", role: "CEO & Founder", image: "/guydp.jpeg", linkedin: "https://www.linkedin.com/in/hrishabh-gautam1625/", twitter: "https://x.com/hrishabhxgautam" },
+  { name: "Suraj Biswas", role: "CTO", image: "/aboutavatar2.jpg", linkedin: "#", twitter: "#" },
   // Add more team members as needed
 ];
 

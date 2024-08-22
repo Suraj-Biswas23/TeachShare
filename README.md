@@ -11,3 +11,4 @@ This is a next.js project
 6. npm install @reduxjs/toolkit react-redux axios react-toastify date-fns react-icons
 7. npm install react-icons date-fns react-toastify
 8. npm install date-fns
+9. npm install axios

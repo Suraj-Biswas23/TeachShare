@@ -1,28 +1,32 @@
-import React, { useState } from 'react'
-import { Send } from 'lucide-react'
-import axios from 'axios'
+import React, { useState, useEffect, useRef } from 'react';
+import { Send } from 'lucide-react';
+import axios from 'axios';
 
 interface Message {
-  role: 'user' | 'ai'
-  content: string
+  role: 'user' | 'ai';
+  content: string;
 }
 
 export default function ChatInterface({ textContent }: { textContent: string }) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [inputMessage, setInputMessage] = useState('')
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputMessage.trim()) {
       const newMessage: Message = { role: 'user', content: inputMessage };
-      setMessages([...messages, newMessage]);
-  
+      setMessages((prev) => [...prev, newMessage]);
+
+      console.log('User message:', inputMessage);
+      console.log('Text content (context) sent to model:', textContent);
+
       const apiToken = process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY;
       console.log('Hugging Face API token:', apiToken);
-  
+
       try {
         const response = await axios.post(
-          'https://api-inference.huggingface.co/models/distilbert-base-uncased-distilled-squad',
+          'https://api-inference.huggingface.co/models/deepset/roberta-base-squad2',
           {
             inputs: {
               question: inputMessage,
@@ -36,19 +40,44 @@ export default function ChatInterface({ textContent }: { textContent: string }) 
           }
         );
         console.log('Hugging Face API response:', response.data);
-  
+
         const aiResponse: Message = { role: 'ai', content: response.data.answer };
         setMessages((prev) => [...prev, aiResponse]);
-        setInputMessage('');
       } catch (error) {
         console.error('Error calling Hugging Face API:', error);
       }
+
+      // Clear the input field after sending the message
+      setInputMessage('');
     }
   };
 
+  const handleNewChat = () => {
+    // Clear all messages and reset input
+    setMessages([]);
+    setInputMessage('');
+  };
+
+  useEffect(() => {
+    // Scroll to the bottom whenever messages change
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    // Set default message if there are no messages and textContent is available
+    if (textContent && messages.length === 0) {
+      setMessages([{ role: 'ai', content: 'Get started with your questions!' }]);
+    }
+  }, [textContent, messages.length]);
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4">
+      <div
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4"
+      >
         {messages.map((message, index) => (
           <div
             key={index}
@@ -79,8 +108,15 @@ export default function ChatInterface({ textContent }: { textContent: string }) 
           >
             <Send className="w-5 h-5" />
           </button>
+          <button
+            type="button"
+            onClick={handleNewChat}
+            className="bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 flex items-center justify-center"
+          >
+            New Chat
+          </button>
         </div>
       </form>
     </div>
-  )
+  );
 }

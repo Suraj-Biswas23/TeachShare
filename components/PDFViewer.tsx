@@ -10,18 +10,20 @@ interface PDFViewerProps {
 
 const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, onUploadComplete }) => {
   const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(pdfUrl);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
   const handleUploadComplete = async (res: any) => {
     console.log('Upload complete response:', res);
   
     if (Array.isArray(res) && res.length > 0) {
       const fileUrl = res[0].serverData.fileUrl;
+      const fileName = res[0].name; // Assuming the file name is available in the response
       console.log('Uploaded file URL:', fileUrl);
       setUploadedPdfUrl(fileUrl);
+      setUploadedFileName(fileName);
   
       try {
         console.log('Calling PDF parsing API...');
-        // const hardcodedPdfUrl = 'https://utfs.io/f/5f86daa7-9a26-4fcc-89e9-caa8ef97df07-5ybjyg.pdf';
         const response = await fetch('/api/pdf-parser/', {
           method: 'POST',
           headers: {
@@ -48,16 +50,35 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, onUploadComplete }) => {
     }
   };
 
+  const handleRemoveFile = () => {
+    setUploadedPdfUrl(null);
+    setUploadedFileName(null);
+    onUploadComplete('', ''); // Clear the uploaded file info
+  };
+
   return (
     <div className="relative h-full flex flex-col items-center p-4">
       <div className="mb-4">
-        <UploadButton
-          endpoint="pdfUploader"
-          onClientUploadComplete={handleUploadComplete}
-          onUploadError={(error: Error) => {
-            alert(`ERROR! ${error.message}`);
-          }}
-        />
+        {uploadedFileName ? (
+          <div className="flex items-center space-x-2">
+            <span>{uploadedFileName}</span>
+            <button 
+              onClick={handleRemoveFile}
+              className="text-red-500 hover:text-red-700"
+              type="button"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <UploadButton
+            endpoint="pdfUploader"
+            onClientUploadComplete={handleUploadComplete}
+            onUploadError={(error: Error) => {
+              alert(`ERROR! ${error.message}`);
+            }}
+          />
+        )}
       </div>
       {uploadedPdfUrl ? (
         <iframe

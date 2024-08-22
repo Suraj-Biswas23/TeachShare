@@ -1,31 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pdfParse from 'pdf-parse';
-import fetch from 'node-fetch';
+import * as pdfParse from "pdf-parse";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    console.log('Received POST request for PDF parsing');
+    const body = await request.json();
+    const { pdfUrl } = body;
 
-    const { pdfUrl } = await req.json();
-    console.log('PDF URL received:', pdfUrl);
+    if (!pdfUrl) {
+      return NextResponse.json({ message: 'PDF URL is required' }, { status: 400 });
+    }
 
     const response = await fetch(pdfUrl);
-    console.log('Fetch response:', response);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    if (response.ok) {
-      const buffer = await response.buffer();
-      console.log('PDF buffer:', buffer);
+    const data = await pdfParse.default(buffer);
+    const textContent = data.text;
 
-      const data = await pdfParse(buffer);
-      console.log('PDF parsing result:', data);
-
-      return NextResponse.json({ textContent: data.text });
+    return NextResponse.json({ textContent }, { status: 200 });
+  } catch (error: unknown) {
+    console.error('Error parsing PDF:', error);
+    
+    if (error instanceof Error) {
+      return NextResponse.json({ message: 'Error parsing PDF', error: error.message }, { status: 500 });
     } else {
-      console.error('Error fetching PDF:', response.status, response.statusText);
-      return NextResponse.json({ error: 'Failed to fetch PDF' }, { status: response.status });
+      return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
     }
-  } catch (error) {
-    console.error("Error parsing PDF:", error);
-    return NextResponse.json({ error: "Failed to parse PDF" }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;

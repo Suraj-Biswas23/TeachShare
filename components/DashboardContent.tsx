@@ -26,7 +26,7 @@ const RecentUploadItem: React.FC<RecentUpload> = ({ title, description, uploadDa
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
-      case 'image': return <Image className="h-5 w-5 text-green-500" />;
+      case 'image': return <Image className="h-5 w-5 text-green-500"/>;
       case 'video': return <Film className="h-5 w-5 text-blue-500" />;
       default: return <FileIcon className="h-5 w-5 text-gray-500" />;
     }

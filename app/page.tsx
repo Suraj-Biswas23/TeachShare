@@ -17,7 +17,7 @@ export default function Home() {
 
       <div className="flex min-h-screen flex-col">
         <Header />
-        <main>
+        <main className="flex-grow">
           <Hero />
           <KeyFeatures />
           <Testimonials />

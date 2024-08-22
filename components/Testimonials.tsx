@@ -1,8 +1,8 @@
 import Image from 'next/image';
 
 const testimonials = [
-  { name: 'John Doe', role: 'Professor', quote: 'TeachShare has revolutionized how I share resources with my students.', avatar: '/avatar1.jpg' },
-  { name: 'Jane Smith', role: 'Student', quote: 'I love how easy it is to find and collaborate on study materials.', avatar: '/avatar2.jpg' },
+  { name: 'Hrishabh gautam', role: 'Professor', quote: 'TeachShare has revolutionized how I share resources with my students.', avatar: '/avatar1.jpg' },
+  { name: 'Suraj Biswas', role: 'Student', quote: 'I love how easy it is to find and collaborate on study materials.', avatar: '/comavatar2.jpg' },
 ];
 
 export default function Testimonials() {

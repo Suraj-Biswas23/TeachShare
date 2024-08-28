@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'ai';
@@ -18,57 +19,38 @@ export default function ChatInterface({ textContent }: { textContent: string }) 
       const newMessage: Message = { role: 'user', content: inputMessage };
       setMessages((prev) => [...prev, newMessage]);
 
-      console.log('User message:', inputMessage);
-      console.log('Text content (context) sent to model:', textContent);
-
-      const apiToken = process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY;
-      console.log('Hugging Face API token:', apiToken);
-
       try {
-        const response = await axios.post(
-          'https://api-inference.huggingface.co/models/deepset/roberta-base-squad2',
-          {
-            inputs: {
-              question: inputMessage,
-              context: textContent,
-            },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${apiToken}`,
-            },
-          }
-        );
-        console.log('Hugging Face API response:', response.data);
+        const response = await axios.post('/api/gemini-chat', {
+          message: inputMessage,
+          context: textContent,
+        });
 
-        const aiResponse: Message = { role: 'ai', content: response.data.answer };
+        const aiResponse: Message = { role: 'ai', content: response.data.response };
         setMessages((prev) => [...prev, aiResponse]);
       } catch (error) {
-        console.error('Error calling Hugging Face API:', error);
+        console.error('Error calling Gemini API:', error);
+        const errorMessage: Message = { role: 'ai', content: 'Sorry, I encountered an error. Please try again.' };
+        setMessages((prev) => [...prev, errorMessage]);
       }
 
-      // Clear the input field after sending the message
       setInputMessage('');
     }
   };
 
   const handleNewChat = () => {
-    // Clear all messages and reset input
     setMessages([]);
     setInputMessage('');
   };
 
   useEffect(() => {
-    // Scroll to the bottom whenever messages change
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
   useEffect(() => {
-    // Set default message if there are no messages and textContent is available
     if (textContent && messages.length === 0) {
-      setMessages([{ role: 'ai', content: 'Get started with your questions!' }]);
+      setMessages([{ role: 'ai', content: 'I have analyzed the PDF. What would you like to know about it?' }]);
     }
   }, [textContent, messages.length]);
 
@@ -88,7 +70,11 @@ export default function ChatInterface({ textContent }: { textContent: string }) 
                 message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
               }`}
             >
-              {message.content}
+              {message.role === 'user' ? (
+                message.content
+              ) : (
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              )}
             </span>
           </div>
         ))}

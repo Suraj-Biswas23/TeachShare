@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UploadButton } from "@/utils/uploadthing";
 
 interface PDFViewerProps {
@@ -11,16 +11,20 @@ interface PDFViewerProps {
 const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, onUploadComplete }) => {
   const [uploadedPdfUrl, setUploadedPdfUrl] = useState<string | null>(pdfUrl);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const handleUploadComplete = async (res: any) => {
     console.log('Upload complete response:', res);
   
     if (Array.isArray(res) && res.length > 0) {
       const fileUrl = res[0].serverData.fileUrl;
-      const fileName = res[0].name; // Assuming the file name is available in the response
+      const fileName = res[0].name;
       console.log('Uploaded file URL:', fileUrl);
       setUploadedPdfUrl(fileUrl);
       setUploadedFileName(fileName);
+      setIsLoading(true);
+      setRetryCount(0);
   
       try {
         console.log('Calling PDF parsing API...');
@@ -44,6 +48,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, onUploadComplete }) => {
       } catch (error) {
         console.error("Error parsing PDF:", error);
         onUploadComplete(fileUrl, '');
+      } finally {
+        setIsLoading(false);
       }
     } else {
       console.error("Response format is not as expected.");
@@ -53,8 +59,18 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, onUploadComplete }) => {
   const handleRemoveFile = () => {
     setUploadedPdfUrl(null);
     setUploadedFileName(null);
-    onUploadComplete('', ''); // Clear the uploaded file info
+    onUploadComplete('', '');
   };
+
+  useEffect(() => {
+    if (uploadedPdfUrl && retryCount < 3) {
+      const timer = setTimeout(() => {
+        setRetryCount(prevCount => prevCount + 1);
+      }, 2000); // Retry after 2 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [uploadedPdfUrl, retryCount]);
 
   return (
     <div className="relative h-full flex flex-col items-center p-4">
@@ -80,8 +96,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, onUploadComplete }) => {
           />
         )}
       </div>
-      {uploadedPdfUrl ? (
+      {isLoading ? (
+        <p className="text-center">Loading PDF...</p>
+      ) : uploadedPdfUrl ? (
         <iframe
+          key={`${uploadedPdfUrl}-${retryCount}`}
           src={`https://docs.google.com/gview?url=${encodeURIComponent(uploadedPdfUrl)}&embedded=true`}
           className="flex-1 w-full"
           title="PDF Viewer"

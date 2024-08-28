@@ -1,16 +1,37 @@
 "use client";
 
 import Head from "next/head";
+import dynamic from 'next/dynamic';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import { useState } from "react";
 import { FaMapMarkerAlt, FaEnvelope, FaPhone } from 'react-icons/fa';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Importing the images correctly
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: markerIcon.src, 
+    shadowUrl: markerShadow.src,
+    iconAnchor: [12, 41], // Adjusted anchor point (center-bottom)
+    popupAnchor: [1, -34], // Adjusted popup point (optional)
+    shadowAnchor: [12, 41] // Adjusted shadow anchor (optional)
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const MapWithNoSSR = dynamic(() => import("@/components/Map"), {
+  ssr: false
+});
 
 export default function ContactPage() {
-  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
 
-  const handleFormSubmit = () => {
+  const handleFormSubmit = (): void => {
     setFormSubmitted(true);
   };
 
@@ -22,13 +43,14 @@ export default function ContactPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="flex min-h-screen flex-col bg-gray-100">
+      <div className="flex min-h-screen flex-col bg-gradient-to-r from-blue-50 to-gray-100">
         <Header />
         <main className="flex-1 py-12">
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl font-bold text-center mb-12 text-gray-800">Contact Us</h1>
+            <h1 className="text-4xl font-bold text-center mb-12 text-gray-900">Contact Us</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="bg-white rounded-lg shadow-lg p-8">
+              {/* Contact Form Section */}
+              <div className="bg-white rounded-lg shadow-lg p-8 transition-transform transform hover:scale-105">
                 <h2 className="text-2xl font-semibold mb-6 text-gray-700">Send us a message</h2>
                 {formSubmitted ? (
                   <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
@@ -39,13 +61,15 @@ export default function ContactPage() {
                   <ContactForm onSubmit={handleFormSubmit} />
                 )}
               </div>
-              <div>
-                <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+
+              {/* Contact Information Section */}
+              <div className="space-y-8">
+                <div className="bg-white rounded-lg shadow-lg p-8 transition-transform transform hover:scale-105">
                   <h2 className="text-2xl font-semibold mb-6 text-gray-700">Contact Information</h2>
                   <ul className="space-y-4">
                     <li className="flex items-center">
                       <FaMapMarkerAlt className="text-blue-500 mr-3" />
-                      <span>123 Education Street, Learning City, 12345</span>
+                      <span>S.G. Palya, Bengaluru, 560029</span>
                     </li>
                     <li className="flex items-center">
                       <FaEnvelope className="text-blue-500 mr-3" />
@@ -57,10 +81,22 @@ export default function ContactPage() {
                     </li>
                   </ul>
                 </div>
-                <div className="bg-white rounded-lg shadow-lg p-8">
+
+                {/* Map Section */}
+                <div className="bg-white rounded-lg shadow-lg p-8 transition-transform transform hover:scale-105">
                   <h2 className="text-2xl font-semibold mb-6 text-gray-700">Our Location</h2>
-                  <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-600">Map placeholder</p>
+                  <div className="h-64 rounded-lg overflow-hidden">
+                    <MapWithNoSSR />
+                  </div>
+                  <div className="mt-4 text-center">
+                    <a 
+                      href="https://www.openstreetmap.org/node/8976438665#map=19/12.934425/77.605890" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      View larger map
+                    </a>
                   </div>
                 </div>
               </div>

@@ -14,7 +14,7 @@ export default function Header() {
     <div className="container mx-auto px-6 py-4">
        <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
-            <Image src="/icon.ico" alt="TeachShare Logo" width={40} height={40} />
+            <Image src="/icon.png" alt="TeachShare Logo" width={40} height={40} />
             <span className="ml-2 font-bold text-2xl text-blue-600">TeachShare</span>
           </Link>
           

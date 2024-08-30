@@ -20,7 +20,7 @@ const upcomingEvents = [
 ];
 
 const topContributors = [
-  { id: 1, name: "Hrishabh Gautam", contributions: 156, avatar: "/comavatar2.jpg" },
+  { id: 1, name: "Hrishabh Gautam", contributions: 156, avatar: "/resume-pic.jpg" },
   { id: 2, name: "Suraj Biswas", contributions: 132, avatar: "/Designer.jpeg" },
   { id: 3, name: "Jannat Chehal", contributions: 128, avatar: "/aboutavatar1.jpg" },
   { id: 4, name: "Suhana Devi", contributions: 118, avatar: "/girldp.jpeg" },

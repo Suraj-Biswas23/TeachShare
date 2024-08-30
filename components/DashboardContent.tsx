@@ -1,6 +1,6 @@
 "use client";
 import React, { ReactNode, useEffect, useState } from 'react';
-import { Briefcase, Users, BookOpen, TrendingUp, FileText, Image, Film, FileIcon } from 'lucide-react';
+import { Briefcase, Users, BookOpen, TrendingUp, FileText, Image, Film, FileIcon, Bookmark, Download } from 'lucide-react';
 import axios from 'axios';
 
 interface StatCardProps {
@@ -21,6 +21,16 @@ interface DashboardCardProps {
   title: string;
   children: ReactNode;
 }
+
+interface PopularResource {
+  _id: string;
+  title: string;
+  description: string;
+  bookmarks: number;
+  downloads: number;
+  fileType: string;
+}
+
 
 const RecentUploadItem: React.FC<RecentUpload> = ({ title, description, uploadDate, fileType }) => {
   const getFileIcon = (type: string) => {
@@ -62,6 +72,34 @@ const DashboardCard: React.FC<DashboardCardProps> = ({ title, children }) => (
   </div>
 );
 
+const PopularResourceItem: React.FC<PopularResource> = ({ title, description, bookmarks, downloads, fileType }) => {
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
+      case 'image': return <Image className="h-5 w-5 text-green-500" />;
+      case 'video': return <Film className="h-5 w-5 text-blue-500" />;
+      default: return <FileIcon className="h-5 w-5 text-gray-500" />;
+    }
+  };
+  return (
+    <div className="flex items-center space-x-4 py-2 border-b last:border-b-0">
+      {getFileIcon(fileType)}
+      <div className="flex-grow">
+        <h4 className="text-sm font-medium">{title}</h4>
+        <p className="text-xs text-gray-500 truncate">{description}</p>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Bookmark className="h-4 w-4 text-blue-500" />
+        <span className="text-xs">{bookmarks}</span>
+        <Download className="h-4 w-4 text-green-500" />
+        <span className="text-xs">{downloads}</span>
+      </div>
+    </div>
+  );
+};
+
+
+
 const DashboardContent: React.FC = () => {
   const [stats, setStats] = useState({
     totalResources: 0,
@@ -71,17 +109,20 @@ const DashboardContent: React.FC = () => {
   });
 
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([]);
+  const [popularResources, setPopularResources] = useState<PopularResource[]>([]);
 
   const fetchStats = async () => {
     try {
-      const [resources, users, courses, downloads] = await Promise.all([
+      const [resources, users, courses, downloads, popular] = await Promise.all([
         axios.get('/api/stats/total-resources'),
         axios.get('/api/stats/active-users'),
         axios.get('/api/stats/courses'),
         axios.get('/api/stats/downloads'),
+        axios.get('/api/stats/popular-resources'),
       ]);
 
       console.log('Downloads response:', downloads.data); // Add this line for debugging
+      console.log('Popular resources response:', popular.data); // Add this line for debugging
 
       setStats({
         totalResources: resources.data.totalResources,
@@ -89,6 +130,8 @@ const DashboardContent: React.FC = () => {
         courses: courses.data.courses,
         totalDownloads: downloads.data.totalDownloads,
       });
+
+      setPopularResources(popular.data.popularResources);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -136,7 +179,15 @@ const DashboardContent: React.FC = () => {
           )}
         </DashboardCard>
         <DashboardCard title="Popular Resources">
-          <p>List of popular resources will appear here.</p>
+          {popularResources.length > 0 ? (
+            <div className="space-y-2">
+              {popularResources.map((resource) => (
+                <PopularResourceItem key={resource._id} {...resource} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No popular resources found.</p>
+          )}
         </DashboardCard>
       </div>
 
@@ -146,5 +197,4 @@ const DashboardContent: React.FC = () => {
     </div>
   );
 };
-
 export default DashboardContent;

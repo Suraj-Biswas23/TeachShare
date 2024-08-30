@@ -7,8 +7,8 @@ import Image from "next/image";
 import { FaLinkedin, FaTwitter } from 'react-icons/fa';
 
 const teamMembers = [
-  { name: "Hrishabh Gautam", role: "CEO & Founder", image: "/guydp.jpeg", linkedin: "https://www.linkedin.com/in/hrishabh-gautam1625/", twitter: "https://x.com/hrishabhxgautam" },
-  { name: "Suraj Biswas", role: "CTO", image: "/aboutavatar2.jpg", linkedin: "#", twitter: "#" },
+  { name: "Hrishabh Gautam", role: "CEO & Co-Founder", image: "/guydp.jpeg", linkedin: "https://www.linkedin.com/in/hrishabh-gautam1625/", twitter: "https://x.com/hrishabhxgautam" },
+  { name: "Suraj Biswas", role: "COO & Co-Founder", image: "/aboutavatar2.jpg", linkedin: "#", twitter: "#" },
   // Add more team members as needed
 ];
 
@@ -53,24 +53,26 @@ export default function AboutPage() {
           <section className="py-16 bg-white">
             <div className="container mx-auto px-4">
               <h2 className="text-3xl font-bold text-center mb-12">Meet Our Team</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {teamMembers.map((member, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg shadow-md overflow-hidden">
-                    <Image src={member.image} alt={member.name} width={400} height={400} className="w-full h-96 object-cover" />
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold mb-2">{member.name}</h3>
-                      <p className="text-gray-600 mb-4">{member.role}</p>
-                      <div className="flex space-x-4">
-                        <a href={member.linkedin} className="text-blue-600 hover:text-blue-800">
-                          <FaLinkedin size={24} />
-                        </a>
-                        <a href={member.twitter} className="text-blue-400 hover:text-blue-600">
-                          <FaTwitter size={24} />
-                        </a>
+              <div className="flex justify-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl">
+                  {teamMembers.map((member, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg shadow-md overflow-hidden">
+                      <Image src={member.image} alt={member.name} width={400} height={400} className="w-full h-96 object-cover" />
+                      <div className="p-6 text-center">
+                        <h3 className="text-xl font-semibold mb-2">{member.name}</h3>
+                        <p className="text-gray-600 mb-4">{member.role}</p>
+                        <div className="flex justify-center space-x-4">
+                          <a href={member.linkedin} className="text-blue-600 hover:text-blue-800">
+                            <FaLinkedin size={24} />
+                          </a>
+                          <a href={member.twitter} className="text-blue-400 hover:text-blue-600">
+                            <FaTwitter size={24} />
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </section>

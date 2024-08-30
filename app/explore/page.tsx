@@ -6,16 +6,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import FilterSidebar from "@/components/FilterSidebar";
-import ResourceCard from "@/components/ResourceCard";
+import ExploreResourceCard from "@/components/ExploreResourceCard";
 import { FaThList, FaThLarge } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/navigation';
+import { useUser } from "@clerk/nextjs";
 
-interface Material {
+interface Resource {
   _id: string;
   title: string;
-  description: string;
   uploaderName: string;
   course: string;
   subject: string;
@@ -29,27 +29,28 @@ interface Material {
   rating: number;
   reviews: number;
   bookmarks: number;
+  fileSize: number;
+  description?: string;
 }
 
 interface Filters {
-  formats: string[];
+  type: string;
+  dateRange: string;
   course: string;
   subject: string;
   tag: string;
-  dateRange: string;
-  sortBy: string;
 }
 
 export default function ExplorePage() {
-  const [materials, setMaterials] = useState<Material[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<string>('relevance');
   const [filters, setFilters] = useState<Filters>({
-    formats: [],
+    type: '',
+    dateRange: '',
     course: '',
     subject: '',
-    tag: '',
-    dateRange: '',
-    sortBy: 'relevance'
+    tag: ''
   });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -59,11 +60,15 @@ export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const router = useRouter();
+  const { isSignedIn } = useUser();
 
   useEffect(() => {
     fetchCoursesAndSubjects();
-    fetchMaterials();
-  }, [filters, page]);
+  }, []);
+
+  useEffect(() => {
+    fetchResources();
+  }, [filters, sortBy, page, searchQuery]);
 
   const fetchCoursesAndSubjects = async () => {
     try {
@@ -87,58 +92,48 @@ export default function ExplorePage() {
     }
   };
 
-  const fetchMaterials = useCallback(async () => {
+  const fetchResources = useCallback(async () => {
     try {
       const response = await fetch('/api/material/get', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filters, page }),
+        body: JSON.stringify({ 
+          query: searchQuery,
+          filters: {
+            ...filters,
+            type: filters.type.toLowerCase()
+          }, 
+          sortBy, 
+          page 
+        }),
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch materials');
+        throw new Error('Failed to fetch resources');
       }
       const data = await response.json();
-      setMaterials(prevMaterials => page === 1 ? data.resources : [...prevMaterials, ...data.resources]);
+      setResources(prevResources => page === 1 ? data.resources : [...prevResources, ...data.resources]);
       setHasMore(data.hasMore);
     } catch (error) {
-      console.error('Error fetching materials:', error);
-      toast.error('Failed to fetch materials');
+      console.error('Error fetching resources:', error);
+      toast.error('Failed to fetch resources');
     }
-  }, [filters, page]);
+  }, [filters, sortBy, page, searchQuery]);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
     setPage(1);
-    if (!query) {
-      await fetchMaterials();
-      return;
-    }
-    try {
-      const response = await fetch('/api/material/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query, filters, page: 1 }),
-      });
-      if (!response.ok) {
-        throw new Error('Search failed');
-      }
-      const data = await response.json();
-      setMaterials(data.resources);
-      setHasMore(data.hasMore);
-    } catch (error) {
-      console.error('Error searching materials:', error);
-      toast.error('Search failed');
-    }
   };
 
   const handleFilterChange = (newFilters: Filters) => {
     setFilters(newFilters);
     setPage(1);
-    setSearchQuery('');
+  };
+
+  const handleSortChange = (newSort: string) => {
+    setSortBy(newSort);
+    setPage(1);
   };
 
   const loadMore = () => {
@@ -150,21 +145,13 @@ export default function ExplorePage() {
     toast.success(`Search saved: ${query}`);
   };
 
-  const handleDownload = () => {
-    router.push('/sign-in');
-  };
-
-  const handleShare = () => {
-    router.push('/sign-in');
-  };
-
-  const handleReview = () => {
-    router.push('/sign-in');
-  };
-
-  const handleBookmark = () => {
-    router.push('/sign-in');
-  };
+  const handleInteraction = useCallback(() => {
+    if (!isSignedIn) {
+      router.push('/sign-in');
+    } else {
+      router.push('/dashboard/search-resources');
+    }
+  }, [isSignedIn, router]);
 
   return (
     <>
@@ -176,18 +163,75 @@ export default function ExplorePage() {
 
       <div className="flex min-h-screen flex-col">
         <Header />
-        <main className="flex flex-1">
-          <FilterSidebar 
-            filters={filters} 
-            onFilterChange={handleFilterChange}
-            courses={courses}
-            subjects={subjects}
-          />
-          <div className="flex-1 container mx-auto px-4 py-8">
-            <h2 className="text-3xl font-bold mb-6">Explore Resources</h2>
-            <SearchBar onSearch={handleSearch} onSave={saveSearch} initialValue={searchQuery} />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <h2 className="text-3xl font-bold mb-6">Explore Resources</h2>
+          <SearchBar onSearch={handleSearch} onSave={saveSearch} initialValue={searchQuery} />
 
-            <div className="flex justify-end items-center my-4">
+          <div className="flex flex-wrap justify-between items-center my-4">
+            <div className="flex flex-wrap items-center space-x-2 mb-2">
+              <select 
+                onChange={(e) => handleFilterChange({ ...filters, type: e.target.value })}
+                value={filters.type}
+                className="p-2 border rounded"
+              >
+                <option value="">All Types</option>
+                <option value="pdf">PDF</option>
+                <option value="docx">DOCX</option>
+                <option value="xlsx">XLSX</option>
+              </select>
+              <select 
+                onChange={(e) => handleFilterChange({ ...filters, course: e.target.value })}
+                value={filters.course}
+                className="p-2 border rounded"
+              >
+                <option value="">All Courses</option>
+                {courses.map((course, index) => (
+                  <option key={index} value={course}>{course}</option>
+                ))}
+              </select>
+              <select 
+                onChange={(e) => handleFilterChange({ ...filters, subject: e.target.value })}
+                value={filters.subject}
+                className="p-2 border rounded"
+              >
+                <option value="">All Subjects</option>
+                {subjects.map((subject, index) => (
+                  <option key={index} value={subject}>{subject}</option>
+                ))}
+              </select>
+              <input 
+                type="text" 
+                placeholder="Filter by tag"
+                value={filters.tag}
+                onChange={(e) => handleFilterChange({ ...filters, tag: e.target.value.toLowerCase() })}
+                className="p-2 border rounded"
+              />
+            </div>
+            <div className="flex items-center space-x-2 mb-2">
+              <select 
+                onChange={(e) => handleSortChange(e.target.value)}
+                value={sortBy}
+                className="p-2 border rounded"
+              >
+                <option value="relevance">Relevance</option>
+                <option value="mostViewed">Most Viewed</option>
+                <option value="mostDownloaded">Most Downloaded</option>
+                <option value="mostShared">Most Shared</option>
+                <option value="highestRated">Highest Rated</option>
+                <option value="mostReviewed">Most Reviewed</option>
+                <option value="aToZ">A to Z</option>
+                <option value="zToA">Z to A</option>
+                <option value="largestFirst">Largest First</option>
+                <option value="smallestFirst">Smallest First</option>
+                <option value="authorAZ">Author A-Z</option>
+                <option value="mostBookmarked">Most Bookmarked</option>
+              </select>
+              <input 
+                type="date" 
+                value={filters.dateRange || ''}
+                onChange={(e) => handleFilterChange({ ...filters, dateRange: e.target.value})}
+                className="p-2 border rounded"
+              />
               <button onClick={() => setView('grid')} className={`p-2 ${view === 'grid' ? 'text-blue-500' : ''}`}>
                 <FaThLarge />
               </button>
@@ -195,47 +239,43 @@ export default function ExplorePage() {
                 <FaThList />
               </button>
             </div>
-
-            <div className={view === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
-              {materials.map(material => (
-                <ResourceCard 
-                  key={material._id} 
-                  resource={material}
-                  onDownload={handleDownload}
-                  onShare={handleShare}
-                  onReview={handleReview}
-                  onBookmark={handleBookmark}
-                />
-              ))}
-            </div>
-
-            {hasMore && (
-              <button 
-                onClick={loadMore} 
-                className="mt-8 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-auto block"
-              >
-                Load More
-              </button>
-            )}
-
-            {savedSearches.length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-xl font-bold mb-2">Saved Searches</h3>
-                <ul>
-                  {savedSearches.map((search, index) => (
-                    <li key={index} className="mb-1">
-                      <button 
-                        onClick={() => handleSearch(search)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        {search}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
+
+          <div className={view === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
+            {resources.map(resource => (
+              <ExploreResourceCard
+                key={resource._id}
+                resource={resource}
+              />
+            ))}
+          </div>
+
+          {hasMore && (
+            <button 
+              onClick={loadMore} 
+              className="mt-8 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Load More
+            </button>
+          )}
+
+          {savedSearches.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-xl font-bold mb-2">Saved Searches</h3>
+              <ul>
+                {savedSearches.map((search, index) => (
+                  <li key={index} className="mb-1">
+                    <button 
+                      onClick={() => handleSearch(search)}
+                      className="text-blue-500 hover:underline"
+                    >
+                      {search}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </main>
         <Footer />
       </div>

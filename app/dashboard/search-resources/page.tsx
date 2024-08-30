@@ -543,7 +543,6 @@ export default function SearchResourcesPage() {
             onDownload={handleDownload}
             onShare={handleShare}
             onBookmark={handleBookmark}
-            onViewReviews={() => handleViewReviews(resource._id)}
           />
         ))}
       </div>

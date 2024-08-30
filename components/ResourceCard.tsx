@@ -421,8 +421,14 @@
           >
             <FaShare />
           </button>
-          <button 
-            onClick={() => setIsReviewDialogOpen(true)}
+          <button
+            onClick={() => {
+              if (hasUserReviewed) {
+                toast.info('You have already submitted a review for this material.');
+              } else {
+                setIsReviewDialogOpen(true);
+              }
+            }}
             className="text-gray-500 hover:text-gray-700"
           >
             <FaEdit />

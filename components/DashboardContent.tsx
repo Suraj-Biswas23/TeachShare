@@ -217,26 +217,30 @@ const DashboardContent: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <DashboardCard title="Recent Uploads">
-          {recentUploads.length > 0 ? (
-            <div className="space-y-2">
-              {recentUploads.map((upload) => (
-                <RecentUploadItem key={upload._id} {...upload} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">No recent uploads found.</p>
-          )}
+          <div className="h-64 overflow-y-auto pr-2">
+            {recentUploads.length > 0 ? (
+              <div className="space-y-2">
+                {recentUploads.map((upload) => (
+                  <RecentUploadItem key={upload._id} {...upload} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No recent uploads found.</p>
+            )}
+          </div>
         </DashboardCard>
         <DashboardCard title="Popular Resources">
-          {popularResources.length > 0 ? (
-            <div className="space-y-2">
-              {popularResources.map((resource) => (
-                <PopularResourceItem key={resource._id} {...resource} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">No popular resources found.</p>
-          )}
+          <div className="h-64 overflow-y-auto pr-2">
+            {popularResources.length > 0 ? (
+              <div className="space-y-2">
+                {popularResources.map((resource) => (
+                  <PopularResourceItem key={resource._id} {...resource} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No popular resources found.</p>
+            )}
+          </div>
         </DashboardCard>
       </div>
 

@@ -125,6 +125,30 @@ export default function MyResourcesPage() {
     }
   };
 
+  const handleDelete = async (resourceId: string) => {
+    try {
+      const response = await fetch(`/api/material/delete/${resourceId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete resource');
+      }
+
+      const data = await response.json();
+      toast.success(data.message);
+
+      // Remove the deleted resource from the state
+      setMyResources(prevResources => prevResources.filter(resource => resource._id !== resourceId));
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+      toast.error('Failed to delete resource');
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6">My Resources</h2>
@@ -137,6 +161,8 @@ export default function MyResourcesPage() {
             onDownload={handleDownload}
             onShare={handleShare}
             onBookmark={handleBookmark}
+            onDelete={handleDelete}
+            showDeleteButton={true}
           />
         ))}
       </div>

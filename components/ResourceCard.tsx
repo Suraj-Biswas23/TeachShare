@@ -345,7 +345,7 @@
 //     );
 //   }
 import React, { useState, useEffect } from 'react';
-import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaInfoCircle, FaEdit } from 'react-icons/fa';
+import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaInfoCircle, FaEdit, FaTrash } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -373,6 +373,15 @@ interface Resource {
   description?: string;
 }
 
+interface ResourceCardProps {
+  resource: Resource;
+  onDownload: (fileUrl: string) => void;
+  onShare: (fileUrl: string) => void;
+  onBookmark: (resourceId: string) => void;
+  onDelete?: (resourceId: string) => void;
+  showDeleteButton?: boolean;
+}
+
 interface Review {
   _id: string;
   userId: string;
@@ -382,18 +391,14 @@ interface Review {
   createdAt: string;
 }
 
-interface ResourceCardProps {
-  resource: Resource;
-  onDownload: (fileUrl: string) => void;
-  onShare: (fileUrl: string) => void;
-  onBookmark: (resourceId: string) => void;
-}
 
 export default function ResourceCard({ 
   resource: initialResource, 
   onDownload, 
   onShare,
-  onBookmark
+  onBookmark,
+  onDelete,
+  showDeleteButton = false
 }: ResourceCardProps) {
   const [resource, setResource] = useState<Resource>(initialResource);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
@@ -513,6 +518,11 @@ export default function ResourceCard({
       toast.error('Failed to submit review');
     }
   };
+  const handleDelete = async () => {
+    if (onDelete) {
+      onDelete(resource._id);
+    }
+  };
 
   const handleReviewClick = async () => {
     try {
@@ -606,8 +616,16 @@ export default function ResourceCard({
         >
           <FaEdit />
         </button>
+        {showDeleteButton && onDelete && (
+          <button
+            onClick={handleDelete}
+            className="text-red-500 hover:text-red-700"
+          >
+            <FaTrash />
+          </button>
+        )}
       </div>
-
+      
       <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
         <DialogContent>
           <DialogHeader>

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@clerk/clerk-sdk-node": "^5.0.28",
-    "@clerk/nextjs": "^5.2.2",
+    "@clerk/nextjs": "^5.3.7",
     "@google-cloud/dialogflow": "^6.8.0",
     "@google-cloud/dialogflow-cx": "^4.8.0",
     "@google/generative-ai": "^0.17.1",

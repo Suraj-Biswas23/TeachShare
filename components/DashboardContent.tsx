@@ -81,6 +81,8 @@ const DashboardContent: React.FC = () => {
         axios.get('/api/stats/downloads'),
       ]);
 
+      console.log('Downloads response:', downloads.data); // Add this line for debugging
+
       setStats({
         totalResources: resources.data.totalResources,
         activeUsers: users.data.activeUsers,
@@ -105,8 +107,8 @@ const DashboardContent: React.FC = () => {
 
     fetchRecentUploads();
 
-    // Set up an interval to fetch stats every 30 seconds
-    const intervalId = setInterval(fetchStats, 30000);
+    // Set up an interval to fetch stats every 5s
+    const intervalId = setInterval(fetchStats, 5000);
 
     // Clean up the interval on component unmount
     return () => clearInterval(intervalId);

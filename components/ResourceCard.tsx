@@ -1,3 +1,4 @@
+<<<<<<< HEAD
   // import { useState } from 'react';
   // import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaEllipsisV, FaEdit, FaTrash, FaArchive, FaFolderPlus, FaFolderMinus } from 'react-icons/fa';
   // import { format } from 'date-fns';
@@ -240,6 +241,103 @@ export default function ResourceCard({
     try {
       const response = await fetch(`/api/material/hasReviewed?materialId=${resource._id}`);
       if (response.ok) {
+=======
+import React, { useState, useEffect } from 'react';
+  import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaInfoCircle, FaEdit } from 'react-icons/fa';
+  import { format } from 'date-fns';
+  import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+  import { Input } from "@/components/ui/input";
+  import { Button } from "@/components/ui/button";
+  import { Textarea } from "@/components/ui/textarea";
+  import { toast } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
+  
+  interface Resource {
+    _id: string;
+    title: string;
+    uploaderName: string;
+    course: string;
+    subject: string;
+    fileType: string;
+    uploadDate: string;
+    tags: string[];
+    fileUrl: string;
+    views: number;
+    downloads: number;
+    shares: number;
+    rating: number;
+    reviews: number;
+    bookmarks: number;
+    description?: string;
+  }
+  
+  interface Review {
+    _id: string;
+    userId: string;
+    userName: string;
+    rating: number;
+    text: string;
+    createdAt: string;
+  }
+  
+  interface ResourceCardProps {
+    resource: Resource;
+    onDownload: (fileUrl: string) => void;
+    onShare: (fileUrl: string) => void;
+    onBookmark: (resourceId: string) => void;
+  }
+  
+  export default function ResourceCard({ 
+    resource: initialResource, 
+    onDownload, 
+    onShare,
+    onBookmark
+  }: ResourceCardProps) {
+    const [resource, setResource] = useState<Resource>(initialResource);
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+    const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+    const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+    const [isReviewsDialogOpen, setIsReviewsDialogOpen] = useState(false);
+    const [reviewRating, setReviewRating] = useState(0);
+    const [reviewText, setReviewText] = useState('');
+    const [hasUserReviewed, setHasUserReviewed] = useState(false);
+    const [reviews, setReviews] = useState<Review[]>([]);
+  
+    useEffect(() => {
+      checkUserReview();
+    }, []);
+  
+    const checkUserReview = async () => {
+      try {
+        const response = await fetch(`/api/material/hasReviewed?materialId=${resource._id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setHasUserReviewed(data.hasReviewed);
+        } else {
+          toast.error('Failed to check review status.');
+        }
+      } catch (error) {
+        console.error('Error checking user review:', error);
+        toast.error('Error checking review status.');
+      }
+    };
+  
+    const handleInteraction = async (interactionType: 'views' | 'downloads' | 'shares' | 'bookmarks') => {
+      try {
+        const response = await fetch('/api/material/interact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            materialId: resource._id,
+            interactionType
+          }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to record interaction');
+        }
+>>>>>>> ecf0536188f2ac56b6330672404861ad07289c6b
         const data = await response.json();
         setHasUserReviewed(data.hasReviewed);
       } else {

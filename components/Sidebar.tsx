@@ -28,7 +28,11 @@ const Sidebar: React.FC = () => {
   return (
     <div className={`bg-indigo-800 text-white ${isCollapsed ? 'w-20' : 'w-64'} flex-shrink-0 min-h-screen transition-all duration-300`}>
       <div className={`p-5 flex items-center justify-between ${isCollapsed ? 'justify-center' : ''}`}>
-        {!isCollapsed && <span className="text-2xl font-extrabold">TeachShare</span>}
+        {!isCollapsed && (
+          <a href="/" className="text-2xl font-extrabold">
+            TeachShare
+          </a>
+        )}
         <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-white">
           {isCollapsed ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
         </button>

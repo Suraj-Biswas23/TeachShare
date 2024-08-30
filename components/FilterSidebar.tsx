@@ -1,137 +1,110 @@
-import { useState, useEffect } from "react";
-
-const categories = ["All", "Notes", "Articles", "Course Plans", "Question Papers"];
-const formats = ["PDF", "DOCX", "PPT"];
-const courses = ["MCA", "MBA", "AI/ML", "BCA", "BBA", "Other"];
-const subjects = ["React", "Python", "Machine Learning", "SQL", "AWS", "Flutter", "Cybersecurity", "Data Visualization", "Agile Methodologies", "Blockchain"];
-const contentTypes = ["Article", "Tutorial", "Case Study"];
+// components/FilterSidebar.tsx
+import React from 'react';
 
 interface FilterSidebarProps {
   filters: {
-    category: string;
     formats: string[];
-    dateRange: string;
     course: string;
     subject: string;
     tag: string;
-    contentType: string;
+    dateRange: string;
+    sortBy: string;
   };
   onFilterChange: (filters: FilterSidebarProps['filters']) => void;
+  courses: string[];
+  subjects: string[];
 }
 
-export default function FilterSidebar({ filters, onFilterChange }: FilterSidebarProps) {
-  const [localFilters, setLocalFilters] = useState(filters);
-
-  useEffect(() => {
-    onFilterChange(localFilters);
-  }, [localFilters, onFilterChange]);
-
-  const updateFilter = (key: string, value: string | string[]) => {
-    setLocalFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const toggleFormat = (format: string) => {
-    const newFormats = localFilters.formats.includes(format)
-      ? localFilters.formats.filter(f => f !== format)
-      : [...localFilters.formats, format];
-    updateFilter('formats', newFormats);
+const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFilterChange, courses, subjects }) => {
+  const handleChange = (key: string, value: string | string[]) => {
+    onFilterChange({ ...filters, [key]: value });
   };
 
   return (
-    <aside className="w-1/5 bg-white p-4 shadow-md">
+    <aside className="w-64 bg-gray-100 p-4">
+      <h3 className="text-lg font-semibold mb-4">Filters</h3>
+      
       <div className="mb-4">
-        <h2 className="text-lg font-semibold">Categories</h2>
-        <ul>
-          {categories.map(category => (
-            <li key={category} className="my-2">
-              <button
-                onClick={() => updateFilter('category', category)}
-                className={`text-gray-700 hover:text-blue-600 focus:outline-none ${
-                  localFilters.category === category ? "font-bold" : ""
-                }`}
-              >
-                {category}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Formats</h2>
-        <ul>
-          {formats.map(format => (
-            <li key={format} className="my-2">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={localFilters.formats.includes(format)}
-                  onChange={() => toggleFormat(format)}
-                  className="mr-2"
-                />
-                {format}
-              </label>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Date Range</h2>
-        <input
-          type="date"
-          value={localFilters.dateRange}
-          onChange={(e) => updateFilter('dateRange', e.target.value)}
+        <label className="block mb-2">File Type</label>
+        <select 
+          value={filters.formats[0] || ''}
+          onChange={(e) => handleChange('formats', [e.target.value])}
           className="w-full p-2 border rounded"
-        />
+        >
+          <option value="">All Types</option>
+          <option value="pdf">PDF</option>
+          <option value="docx">DOCX</option>
+          <option value="xlsx">XLSX</option>
+        </select>
       </div>
+
       <div className="mb-4">
-        <h2 className="text-lg font-semibold">Course</h2>
-        <select
-          value={localFilters.course}
-          onChange={(e) => updateFilter('course', e.target.value)}
+        <label className="block mb-2">Course</label>
+        <select 
+          value={filters.course}
+          onChange={(e) => handleChange('course', e.target.value)}
           className="w-full p-2 border rounded"
         >
           <option value="">All Courses</option>
-          {courses.map(course => (
-            <option key={course} value={course}>{course}</option>
+          {courses.map((course, index) => (
+            <option key={index} value={course}>{course}</option>
           ))}
         </select>
       </div>
+
       <div className="mb-4">
-        <h2 className="text-lg font-semibold">Subject</h2>
-        <select
-          value={localFilters.subject}
-          onChange={(e) => updateFilter('subject', e.target.value)}
+        <label className="block mb-2">Subject</label>
+        <select 
+          value={filters.subject}
+          onChange={(e) => handleChange('subject', e.target.value)}
           className="w-full p-2 border rounded"
         >
           <option value="">All Subjects</option>
-          {subjects.map(subject => (
-            <option key={subject} value={subject}>{subject}</option>
+          {subjects.map((subject, index) => (
+            <option key={index} value={subject}>{subject}</option>
           ))}
         </select>
       </div>
+
       <div className="mb-4">
-        <h2 className="text-lg font-semibold">Tag</h2>
-        <input
-          type="text"
-          value={localFilters.tag}
-          onChange={(e) => updateFilter('tag', e.target.value)}
-          placeholder="Enter tag..."
+        <label className="block mb-2">Tag</label>
+        <input 
+          type="text" 
+          value={filters.tag}
+          onChange={(e) => handleChange('tag', e.target.value)}
+          placeholder="Filter by tag"
           className="w-full p-2 border rounded"
         />
       </div>
+
       <div className="mb-4">
-        <h2 className="text-lg font-semibold">Content Type</h2>
-        <select
-          value={localFilters.contentType}
-          onChange={(e) => updateFilter('contentType', e.target.value)}
+        <label className="block mb-2">Upload Date</label>
+        <input 
+          type="date" 
+          value={filters.dateRange}
+          onChange={(e) => handleChange('dateRange', e.target.value)}
+          className="w-full p-2 border rounded"
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-2">Sort By</label>
+        <select 
+          value={filters.sortBy}
+          onChange={(e) => handleChange('sortBy', e.target.value)}
           className="w-full p-2 border rounded"
         >
-          <option value="">All Content Types</option>
-          {contentTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
-          ))}
+          <option value="relevance">Relevance</option>
+          <option value="mostViewed">Most Viewed</option>
+          <option value="mostDownloaded">Most Downloaded</option>
+          <option value="mostShared">Most Shared</option>
+          <option value="highestRated">Highest Rated</option>
+          <option value="mostReviewed">Most Reviewed</option>
+          <option value="mostBookmarked">Most Bookmarked</option>
         </select>
       </div>
     </aside>
   );
-}
+};
+
+export default FilterSidebar;

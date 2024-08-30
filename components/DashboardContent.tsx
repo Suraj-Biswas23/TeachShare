@@ -26,7 +26,7 @@ const RecentUploadItem: React.FC<RecentUpload> = ({ title, description, uploadDa
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
-      case 'image': return <Image className="h-5 w-5 text-green-500"/>;
+      case 'image': return <Image className="h-5 w-5 text-green-500" />;
       case 'video': return <Film className="h-5 w-5 text-blue-500" />;
       default: return <FileIcon className="h-5 w-5 text-gray-500" />;
     }
@@ -72,27 +72,28 @@ const DashboardContent: React.FC = () => {
 
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([]);
 
+  const fetchStats = async () => {
+    try {
+      const [resources, users, courses, downloads] = await Promise.all([
+        axios.get('/api/stats/total-resources'),
+        axios.get('/api/stats/active-users'),
+        axios.get('/api/stats/courses'),
+        axios.get('/api/stats/downloads'),
+      ]);
+
+      setStats({
+        totalResources: resources.data.totalResources,
+        activeUsers: users.data.activeUsers,
+        courses: courses.data.courses,
+        totalDownloads: downloads.data.totalDownloads,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [resources, users, courses, downloads] = await Promise.all([
-          axios.get('/api/stats/total-resources'),
-          axios.get('/api/stats/active-users'),
-          axios.get('/api/stats/courses'),
-          axios.get('/api/stats/downloads'),
-        ]);
-
-        setStats({
-          totalResources: resources.data.totalResources,
-          activeUsers: users.data.activeUsers,
-          courses: courses.data.courses,
-          totalDownloads: downloads.data.totalDownloads,
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
-    };
-
+    fetchStats();
     const fetchRecentUploads = async () => {
       try {
         const response = await axios.get('/api/material/recent-uploads');
@@ -102,8 +103,13 @@ const DashboardContent: React.FC = () => {
       }
     };
 
-    fetchStats();
     fetchRecentUploads();
+
+    // Set up an interval to fetch stats every 30 seconds
+    const intervalId = setInterval(fetchStats, 30000);
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   return (

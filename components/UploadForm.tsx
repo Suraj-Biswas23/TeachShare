@@ -71,6 +71,11 @@ export default function UploadForm() {
       fileType: fileType.toLowerCase(),
       tags,
       fileUrl,
+      views: 0,      // Default initial value
+      shares: 0,     // Default initial value
+      rating: 0,     // Default initial value
+      reviews: 0,    // Default initial value
+      bookmarks: 0   // Default initial value
     }
 
     try {
@@ -166,9 +171,9 @@ export default function UploadForm() {
           >
             <option value="">Select file type</option>
             <option value="pdf">PDF</option>
-            <option value="doc">DOC</option>
+            <option value="docx">DOCX</option>
+            <option value="xlsx">XLSX</option>
             <option value="ppt">PPT</option>
-            <option value="video">Video</option>
             <option value="other">Other</option>
           </select>
           {errors.fileType && <p className="text-red-500 text-sm mt-1">{errors.fileType}</p>}

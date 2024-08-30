@@ -89,6 +89,12 @@ interface MaterialData {
   uploaderName: string;
   uploadDate: Date;
   specificCourse?: string;
+  views: number;
+  downloads: number;
+  shares: number;
+  rating: number;
+  reviews: number;
+  bookmarks: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -127,6 +133,12 @@ export async function POST(request: NextRequest) {
       uploaderId: userId,
       uploaderName: user.name,
       uploadDate: new Date(),
+      views: 0,
+      downloads: 0,
+      shares: 0,
+      rating: 0,
+      reviews: 0,
+      bookmarks: 0,
     };
 
     if (specificCourse) {

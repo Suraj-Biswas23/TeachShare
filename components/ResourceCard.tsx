@@ -171,62 +171,166 @@
   //   );
   // }
 
-import { FaDownload, FaShare } from 'react-icons/fa';
-import { format } from 'date-fns';
-
-interface Resource {
-  _id: string;
-  title: string;
-  uploaderName: string;
-  course: string;
-  subject: string;
-  fileType: string;
-  uploadDate: string;
-  tags: string[];
-  fileUrl: string;
-}
-
-interface ResourceCardProps {
-  resource: Resource;
-  onDownload: (fileUrl: string) => void;
-  onShare: (fileUrl: string) => void;
-}
-
-export default function ResourceCard({ 
-  resource, 
-  onDownload, 
-  onShare,
-}: ResourceCardProps) {
-  return (
-    <div className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 relative">
-      <h3 className="text-lg font-semibold mb-2">{resource.title}</h3>
-      <div className="text-sm text-gray-600 mb-2">
-        <p>By: {resource.uploaderName}</p>
-        <p>Course: {resource.course} | Subject: {resource.subject}</p>
-        <p>Type: {resource.fileType}</p>
-        <p>Uploaded: {format(new Date(resource.uploadDate), 'MM/dd/yyyy')}</p>
-      </div>
-      <div className="flex flex-wrap gap-1 mb-2">
-        {resource.tags.map((tag, index) => (
-          <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-            {tag}
+  import React, { useState } from 'react';
+  import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaInfoCircle } from 'react-icons/fa';
+  import { format } from 'date-fns';
+  import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+  import { Input } from "@/components/ui/input";
+  import { Button } from "@/components/ui/button";
+  import { toast } from 'react-toastify'; // No longer importing ToastContainer
+  import 'react-toastify/dist/ReactToastify.css'; // Import the CSS for react-toastify
+  
+  interface Resource {
+    _id: string;
+    title: string;
+    uploaderName: string;
+    course: string;
+    subject: string;
+    fileType: string;
+    uploadDate: string;
+    tags: string[];
+    fileUrl: string;
+    views?: number;
+    downloads?: number;
+    shares?: number;
+    rating?: number;
+    reviews?: number;
+    bookmarks?: number;
+    description?: string;
+  }
+  
+  interface ResourceCardProps {
+    resource: Resource;
+    onDownload: (fileUrl: string) => void;
+    onShare: (fileUrl: string) => void;
+    onBookmark: (resourceId: string) => void;
+  }
+  
+  export default function ResourceCard({ 
+    resource, 
+    onDownload, 
+    onShare,
+    onBookmark
+  }: ResourceCardProps) {
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+    const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+  
+    const handleCopyLink = () => {
+      navigator.clipboard.writeText(resource.fileUrl);
+    };
+  
+    const handleBookmark = () => {
+      if (typeof onBookmark === 'function') {
+        onBookmark(resource._id);
+        // Removed the toast.success call
+      } else {
+        console.error('onBookmark is not a function');
+      }
+    };
+    
+  
+    return (
+      <div className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 relative">
+        <h3 className="text-lg font-semibold mb-2">{resource.title}</h3>
+        <div className="text-sm text-gray-600 mb-2">
+          <p>By: {resource.uploaderName}</p>
+          <p>Course: {resource.course} | Subject: {resource.subject}</p>
+          <p>Type: {resource.fileType}</p>
+          <p>Uploaded: {format(new Date(resource.uploadDate), 'MM/dd/yyyy')}</p>
+        </div>
+        <div className="flex flex-wrap gap-1 mb-2">
+          {resource.tags.map((tag, index) => (
+            <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+              {tag}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+          <span className="flex items-center">
+            <FaEye className="mr-1" /> {resource.views ?? 0}
           </span>
-        ))}
+          <span className="flex items-center">
+            <FaDownload className="mr-1" /> {resource.downloads ?? 0}
+          </span>
+          <span className="flex items-center">
+            <FaShare className="mr-1" /> {resource.shares ?? 0}
+          </span>
+          <span className="flex items-center">
+            <FaBookmark className="mr-1" /> {resource.bookmarks ?? 0}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <FaStar className="text-yellow-400 mr-1" />
+            <span>
+              {resource.rating !== undefined ? resource.rating.toFixed(1) : '0'} 
+              ({resource.reviews ?? 0} reviews)
+            </span>
+          </div>
+          <button 
+            onClick={() => onDownload(resource.fileUrl)}
+            className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 transition-colors duration-200"
+          >
+            Download
+          </button>
+        </div>
+  
+        <div className="absolute top-2 right-2 flex space-x-2">
+          <button 
+            onClick={() => setIsInfoDialogOpen(true)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <FaInfoCircle />
+          </button>
+          <button 
+            onClick={handleBookmark}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <FaBookmark />
+          </button>
+          <button 
+            onClick={() => setIsShareDialogOpen(true)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <FaShare />
+          </button>
+        </div>
+  
+        <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Resource Description</DialogTitle>
+            </DialogHeader>
+            <p>{resource.description || 'No description available.'}</p>
+            <Button onClick={() => setIsInfoDialogOpen(false)} className="mt-2">Close</Button>
+          </DialogContent>
+        </Dialog>
+  
+        <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Share Resource</DialogTitle>
+            </DialogHeader>
+            <div className="flex items-center space-x-2">
+              <Input 
+                value={resource.fileUrl} 
+                readOnly 
+                onClick={handleCopyLink}
+                className="flex-grow"
+              />
+              <Button onClick={() => onShare(resource.fileUrl)}>
+                Share
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-      <div className="flex justify-between items-center">
-        <button 
-          onClick={() => onDownload(resource.fileUrl)}
-          className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 transition-colors duration-200"
-        >
-          <FaDownload className="inline mr-2" /> Download
-        </button>
-        <button 
-          onClick={() => onShare(resource.fileUrl)}
-          className="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 transition-colors duration-200"
-        >
-          <FaShare className="inline mr-2" /> Share
-        </button>
-      </div>
-    </div>
-  );
-}
+    );
+  }
+  
+  
+  
+  
+  
+  
+  

@@ -268,7 +268,6 @@
 //   );
 // }
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -289,6 +288,13 @@ interface Resource {
   uploadDate: string;
   tags: string[];
   fileUrl: string;
+  views: number;
+  downloads: number;
+  shares: number;
+  rating: number;
+  reviews: number;
+  fileSize: number;
+  bookmarks: number;
 }
 
 export default function SearchResourcesPage() {
@@ -300,16 +306,40 @@ export default function SearchResourcesPage() {
     dateRange: '',
     course: '',
     subject: '',
-    tag: '',
-    contentType: ''
+    tag: ''
   });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [savedSearches, setSavedSearches] = useState<string[]>([]);
+  const [courses, setCourses] = useState<string[]>([]);
+  const [subjects, setSubjects] = useState<string[]>([]);
 
   useEffect(() => {
+    fetchCoursesAndSubjects();
     fetchResources();
   }, [filters, sortBy, page]);
+
+  const fetchCoursesAndSubjects = async () => {
+    try {
+      const coursesResponse = await fetch('/api/courses');
+      if (!coursesResponse.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+      const coursesData = await coursesResponse.json();
+      setCourses(coursesData.map((course: { name: string }) => course.name));
+
+      const subjectsResponse = await fetch('/api/subjects');
+      if (!subjectsResponse.ok) {
+        throw new Error('Failed to fetch subjects');
+      }
+      const subjectsData = await subjectsResponse.json();
+      setSubjects(subjectsData);
+
+    } catch (error) {
+      console.error('Error fetching courses and subjects:', error);
+      toast.error('Failed to fetch courses and subjects');
+    }
+  };
 
   const fetchResources = async () => {
     try {
@@ -318,7 +348,14 @@ export default function SearchResourcesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filters, sortBy, page }),
+        body: JSON.stringify({ 
+          filters: {
+            ...filters,
+            type: filters.type.toLowerCase()  // Convert to lowercase for case-insensitive comparison
+          }, 
+          sortBy, 
+          page 
+        }),
       });
       if (!response.ok) {
         throw new Error('Failed to fetch resources');
@@ -339,7 +376,15 @@ export default function SearchResourcesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query, filters, sortBy, page: 1 }),
+        body: JSON.stringify({ 
+          query, 
+          filters: {
+            ...filters,
+            type: filters.type.toLowerCase()  // Convert to lowercase for case-insensitive comparison
+          }, 
+          sortBy, 
+          page: 1 
+        }),
       });
       const data = await response.json();
       setResources(data.resources);
@@ -397,12 +442,85 @@ export default function SearchResourcesPage() {
     });
   };
 
+  const handleBookmark = (resourceId: string) => {
+    // Add your bookmark logic here
+    toast.success('Resource bookmarked');
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6">Search Resources</h2>
       <SearchBar onSearch={handleSearch} onSave={saveSearch} />
 
-      {/* ... (keep the filter and sort options) */}
+      <div className="flex flex-wrap justify-between items-center my-4">
+        <div className="flex flex-wrap items-center space-x-2 mb-2">
+          <select 
+            onChange={(e) => handleFilterChange({ ...filters, type: e.target.value })}
+            className="p-2 border rounded"
+          >
+            <option value="">All Types</option>
+            <option value="pdf">PDF</option>
+            <option value="docx">DOCX</option>
+            <option value="xlsx">XLSX</option>
+          </select>
+          <select 
+            onChange={(e) => handleFilterChange({ ...filters, course: e.target.value })}
+            className="p-2 border rounded"
+          >
+            <option value="">All Courses</option>
+            {courses.map((course, index) => (
+              <option key={index} value={course}>{course}</option>
+            ))}
+          </select>
+          <select 
+            onChange={(e) => handleFilterChange({ ...filters, subject: e.target.value })}
+            className="p-2 border rounded"
+          >
+            <option value="">All Subjects</option>
+            {subjects.map((subject, index) => (
+              <option key={index} value={subject}>{subject}</option>
+            ))}
+          </select>
+          <input 
+            type="text" 
+            placeholder="Filter by tag"
+            onChange={(e) => handleFilterChange({ ...filters, tag: e.target.value.toLowerCase() })}
+            className="p-2 border rounded"
+          />
+        </div>
+        <div className="flex items-center space-x-2 mb-2">
+          <select 
+            onChange={(e) => handleSortChange(e.target.value)}
+            className="p-2 border rounded"
+          >
+            <optgroup label="Relevance">
+              <option value="relevance">Relevance</option>
+              <option value="mostViewed">Most Viewed</option>
+              <option value="mostDownloaded">Most Downloaded</option>
+              <option value="mostShared">Most Shared</option>
+              <option value="highestRated">Highest Rated</option>
+              <option value="mostReviewed">Most Reviewed</option>
+              <option value="aToZ">A to Z</option>
+              <option value="zToA">Z to A</option>
+              <option value="largestFirst">Largest First</option>
+              <option value="smallestFirst">Smallest First</option>
+              <option value="authorAZ">Author A-Z</option>
+              <option value="mostBookmarked">Most Bookmarked</option>
+            </optgroup>
+          </select>
+          <input 
+            type="date" 
+            onChange={(e) => handleFilterChange({ ...filters, dateRange: e.target.value })}
+            className="p-2 border rounded"
+          />
+          <button onClick={() => setView('grid')} className={`p-2 ${view === 'grid' ? 'text-blue-500' : ''}`}>
+            <FaThLarge />
+          </button>
+          <button onClick={() => setView('list')} className={`p-2 ${view === 'list' ? 'text-blue-500' : ''}`}>
+            <FaThList />
+          </button>
+        </div>
+      </div>
 
       <div className={view === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-4"}>
         {resources.map(resource => (
@@ -411,6 +529,7 @@ export default function SearchResourcesPage() {
             resource={resource}
             onDownload={handleDownload}
             onShare={handleShare}
+            onBookmark={handleBookmark} // Pass onBookmark prop
           />
         ))}
       </div>
@@ -424,7 +543,23 @@ export default function SearchResourcesPage() {
         </button>
       )}
 
-      {/* ... (keep the saved searches section) */}
+      {savedSearches.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-xl font-bold mb-2">Saved Searches</h3>
+          <ul>
+            {savedSearches.map((search, index) => (
+              <li key={index} className="mb-1">
+                <button 
+                  onClick={() => handleSearch(search)}
+                  className="text-blue-500 hover:underline"
+                >
+                  {search}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <ToastContainer position="bottom-right" />
     </div>

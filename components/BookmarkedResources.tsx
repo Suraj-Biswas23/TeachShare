@@ -48,7 +48,7 @@ export default function BookmarkedResources({
           ))}
         </div>
       ) : (
-        <p>No bookmarked resources yet.</p>
+        <p className='text-gray-500'>No bookmarked resources yet.</p>
       )}
     </div>
   );

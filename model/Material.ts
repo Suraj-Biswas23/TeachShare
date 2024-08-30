@@ -119,9 +119,7 @@ interface IMaterial extends Document {
   bookmarks: number;
 }
 
-interface IMaterialModel extends Model<IMaterial> {
-  deleteMaterial(materialId: string, userId: string): Promise<{ message: string }>;
-}
+interface IMaterialModel extends Model<IMaterial> {}
 
 // Schema
 const materialSchema = new Schema<IMaterial>({
@@ -194,28 +192,6 @@ const materialSchema = new Schema<IMaterial>({
     default: 0
   }
 });
-
-// Static method for deleting a material
-materialSchema.statics.deleteMaterial = async function(materialId: string, userId: string) {
-  const material = await this.findOne({ _id: materialId, uploaderId: userId });
-  if (!material) {
-    throw new Error('Material not found or you do not have permission to delete it');
-  }
-
-  // Remove associated bookmarks
-  await mongoose.model('Bookmark').deleteMany({ materialId: materialId });
-
-  // Remove associated reviews
-  await mongoose.model('Review').deleteMany({ materialId: materialId });
-
-  // Remove associated user interactions
-  await mongoose.model('UserInteraction').deleteMany({ materialId: materialId });
-
-  // Delete the material itself
-  await material.remove();
-
-  return { message: 'Material deleted successfully' };
-};
 
 // Model
 export const Material = (mongoose.models.Material || mongoose.model<IMaterial, IMaterialModel>('Material', materialSchema)) as IMaterialModel;

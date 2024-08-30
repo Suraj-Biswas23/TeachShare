@@ -5,6 +5,8 @@ import ResourceCard from '@/components/ResourceCard';
 import BookmarkedResources from '@/components/BookmarkedResources';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 interface Resource {
   _id: string;
@@ -28,6 +30,8 @@ interface Resource {
 export default function MyResourcesPage() {
   const [myResources, setMyResources] = useState<Resource[]>([]);
   const [bookmarkedResources, setBookmarkedResources] = useState<Resource[]>([]);
+  const [resourceToDelete, setResourceToDelete] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchMyResources();
@@ -146,6 +150,14 @@ export default function MyResourcesPage() {
     } catch (error) {
       console.error('Error deleting resource:', error);
       toast.error('Failed to delete resource');
+    } finally {
+      setIsDialogOpen(false); // Close dialog after deletion
+    }
+  };
+
+  const confirmDelete = () => {
+    if (resourceToDelete) {
+      handleDelete(resourceToDelete);
     }
   };
 
@@ -154,25 +166,47 @@ export default function MyResourcesPage() {
       <h2 className="text-3xl font-bold mb-6">My Resources</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {myResources.map(resource => (
-          <ResourceCard 
-            key={resource._id} 
-            resource={resource}
-            onDownload={handleDownload}
-            onShare={handleShare}
-            onBookmark={handleBookmark}
-            onDelete={handleDelete}
-            showDeleteButton={true}
-          />
-        ))}
+        {myResources.length > 0 ? (
+          myResources.map(resource => (
+            <ResourceCard
+              key={resource._id}
+              resource={resource}
+              onDownload={handleDownload}
+              onShare={handleShare}
+              onBookmark={handleBookmark}
+              onDelete={() => {
+                setResourceToDelete(resource._id);
+                setIsDialogOpen(true);
+              }}
+              showDeleteButton={true}
+            />
+          ))
+        ) : (
+          <p className="text-gray-500">No resources available. Please upload some resources.</p>
+        )}
       </div>
 
-      <BookmarkedResources 
+      <BookmarkedResources
         resources={bookmarkedResources}
         onDownload={handleDownload}
         onShare={handleShare}
         onBookmark={handleBookmark}
       />
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this resource? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ToastContainer position="bottom-right" />
     </div>

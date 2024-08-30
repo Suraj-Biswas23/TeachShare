@@ -314,11 +314,16 @@ export default function SearchResourcesPage() {
   const [courses, setCourses] = useState<string[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<any[]>([]); // Update with appropriate type for reviews
 
   useEffect(() => {
     fetchCoursesAndSubjects();
+  }, []);
+
+  useEffect(() => {
     fetchResources();
-  }, [filters, sortBy, page]);
+  }, [filters, sortBy, page, searchQuery]);
 
   const fetchCoursesAndSubjects = async () => {
     try {
@@ -350,6 +355,7 @@ export default function SearchResourcesPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
+          query: searchQuery,
           filters: {
             ...filters,
             type: filters.type.toLowerCase()
@@ -368,55 +374,35 @@ export default function SearchResourcesPage() {
       console.error('Error fetching resources:', error);
       toast.error('Failed to fetch resources');
     }
-  }, [filters, sortBy, page]);
+  }, [filters, sortBy, page, searchQuery]);
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (!query) {
-      // If the search query is empty, revert to fetching all resources
-      setPage(1);
-      await fetchResources();
-      return;
-    }
+  const fetchReviews = useCallback(async (materialId: string) => {
     try {
-      const response = await fetch('/api/material/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          query, 
-          filters: {
-            ...filters,
-            type: filters.type.toLowerCase()
-          }, 
-          sortBy, 
-          page: 1 
-        }),
-      });
+      const response = await fetch(`/api/material/reviews?materialId=${materialId}`);
       if (!response.ok) {
-        throw new Error('Search failed');
+        throw new Error('Failed to fetch reviews');
       }
       const data = await response.json();
-      setResources(data.resources);
-      setHasMore(data.hasMore);
-      setPage(1);
+      setReviews(data.reviews);
     } catch (error) {
-      console.error('Error searching resources:', error);
-      toast.error('Search failed');
+      console.error('Error fetching reviews:', error);
+      toast.error('Failed to fetch reviews');
     }
+  }, []);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setPage(1);
   };
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
     setPage(1);
-    setSearchQuery(''); // Clear search query when filters change
   };
 
   const handleSortChange = (newSort: string) => {
     setSortBy(newSort);
     setPage(1);
-    setSearchQuery(''); // Clear search query when sort changes
   };
 
   const loadMore = () => {
@@ -460,6 +446,16 @@ export default function SearchResourcesPage() {
     toast.success('Resource bookmarked');
   };
 
+  const handleViewReviews = (materialId: string) => {
+    fetchReviews(materialId);
+    setSelectedMaterialId(materialId);
+  };
+
+  const closePopup = () => {
+    setSelectedMaterialId(null);
+    setReviews([]);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6">Search Resources</h2>
@@ -469,6 +465,7 @@ export default function SearchResourcesPage() {
         <div className="flex flex-wrap items-center space-x-2 mb-2">
           <select 
             onChange={(e) => handleFilterChange({ ...filters, type: e.target.value })}
+            value={filters.type}
             className="p-2 border rounded"
           >
             <option value="">All Types</option>
@@ -478,6 +475,7 @@ export default function SearchResourcesPage() {
           </select>
           <select 
             onChange={(e) => handleFilterChange({ ...filters, course: e.target.value })}
+            value={filters.course}
             className="p-2 border rounded"
           >
             <option value="">All Courses</option>
@@ -487,6 +485,7 @@ export default function SearchResourcesPage() {
           </select>
           <select 
             onChange={(e) => handleFilterChange({ ...filters, subject: e.target.value })}
+            value={filters.subject}
             className="p-2 border rounded"
           >
             <option value="">All Subjects</option>
@@ -497,6 +496,7 @@ export default function SearchResourcesPage() {
           <input 
             type="text" 
             placeholder="Filter by tag"
+            value={filters.tag}
             onChange={(e) => handleFilterChange({ ...filters, tag: e.target.value.toLowerCase() })}
             className="p-2 border rounded"
           />
@@ -504,26 +504,26 @@ export default function SearchResourcesPage() {
         <div className="flex items-center space-x-2 mb-2">
           <select 
             onChange={(e) => handleSortChange(e.target.value)}
+            value={sortBy}
             className="p-2 border rounded"
           >
-            <optgroup label="Relevance">
-              <option value="relevance">Relevance</option>
-              <option value="mostViewed">Most Viewed</option>
-              <option value="mostDownloaded">Most Downloaded</option>
-              <option value="mostShared">Most Shared</option>
-              <option value="highestRated">Highest Rated</option>
-              <option value="mostReviewed">Most Reviewed</option>
-              <option value="aToZ">A to Z</option>
-              <option value="zToA">Z to A</option>
-              <option value="largestFirst">Largest First</option>
-              <option value="smallestFirst">Smallest First</option>
-              <option value="authorAZ">Author A-Z</option>
-              <option value="mostBookmarked">Most Bookmarked</option>
-            </optgroup>
+            <option value="relevance">Relevance</option>
+            <option value="mostViewed">Most Viewed</option>
+            <option value="mostDownloaded">Most Downloaded</option>
+            <option value="mostShared">Most Shared</option>
+            <option value="highestRated">Highest Rated</option>
+            <option value="mostReviewed">Most Reviewed</option>
+            <option value="aToZ">A to Z</option>
+            <option value="zToA">Z to A</option>
+            <option value="largestFirst">Largest First</option>
+            <option value="smallestFirst">Smallest First</option>
+            <option value="authorAZ">Author A-Z</option>
+            <option value="mostBookmarked">Most Bookmarked</option>
           </select>
           <input 
             type="date" 
-            onChange={(e) => handleFilterChange({ ...filters, dateRange: e.target.value })}
+            value={filters.dateRange || ''}
+            onChange={(e) => handleFilterChange({ ...filters, dateRange: e.target.value})}
             className="p-2 border rounded"
           />
           <button onClick={() => setView('grid')} className={`p-2 ${view === 'grid' ? 'text-blue-500' : ''}`}>
@@ -542,7 +542,8 @@ export default function SearchResourcesPage() {
             resource={resource}
             onDownload={handleDownload}
             onShare={handleShare}
-            onBookmark={handleBookmark} // Pass onBookmark prop
+            onBookmark={handleBookmark}
+            onViewReviews={() => handleViewReviews(resource._id)}
           />
         ))}
       </div>
@@ -571,6 +572,30 @@ export default function SearchResourcesPage() {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {selectedMaterialId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-4 rounded max-w-lg w-full">
+            <h3 className="text-xl font-bold mb-4">Reviews</h3>
+            <button onClick={closePopup} className="absolute top-2 right-2 text-gray-600 hover:text-gray-800">
+              &times;
+            </button>
+            <div className="overflow-y-auto max-h-80">
+              {reviews.length > 0 ? (
+                reviews.map((review, index) => (
+                  <div key={index} className="border-b border-gray-200 mb-2 pb-2">
+                    <p className="font-semibold">{review.reviewerName}</p>
+                    <p className="text-yellow-500">{'★'.repeat(review.rating)}</p>
+                    <p>{review.reviewText}</p>
+                  </div>
+                ))
+              ) : (
+                <p>No reviews available</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

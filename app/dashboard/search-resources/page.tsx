@@ -270,7 +270,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import SearchBar from '@/components/SearchBar';
 import ResourceCard from '@/components/ResourceCard';
 import { FaThList, FaThLarge } from 'react-icons/fa';
@@ -313,6 +313,7 @@ export default function SearchResourcesPage() {
   const [savedSearches, setSavedSearches] = useState<string[]>([]);
   const [courses, setCourses] = useState<string[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     fetchCoursesAndSubjects();
@@ -341,7 +342,7 @@ export default function SearchResourcesPage() {
     }
   };
 
-  const fetchResources = async () => {
+  const fetchResources = useCallback(async () => {
     try {
       const response = await fetch('/api/material/get', {
         method: 'POST',
@@ -351,7 +352,7 @@ export default function SearchResourcesPage() {
         body: JSON.stringify({ 
           filters: {
             ...filters,
-            type: filters.type.toLowerCase()  // Convert to lowercase for case-insensitive comparison
+            type: filters.type.toLowerCase()
           }, 
           sortBy, 
           page 
@@ -367,9 +368,16 @@ export default function SearchResourcesPage() {
       console.error('Error fetching resources:', error);
       toast.error('Failed to fetch resources');
     }
-  };
+  }, [filters, sortBy, page]);
 
   const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (!query) {
+      // If the search query is empty, revert to fetching all resources
+      setPage(1);
+      await fetchResources();
+      return;
+    }
     try {
       const response = await fetch('/api/material/search', {
         method: 'POST',
@@ -380,12 +388,15 @@ export default function SearchResourcesPage() {
           query, 
           filters: {
             ...filters,
-            type: filters.type.toLowerCase()  // Convert to lowercase for case-insensitive comparison
+            type: filters.type.toLowerCase()
           }, 
           sortBy, 
           page: 1 
         }),
       });
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
       const data = await response.json();
       setResources(data.resources);
       setHasMore(data.hasMore);
@@ -399,11 +410,13 @@ export default function SearchResourcesPage() {
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
     setPage(1);
+    setSearchQuery(''); // Clear search query when filters change
   };
 
   const handleSortChange = (newSort: string) => {
     setSortBy(newSort);
     setPage(1);
+    setSearchQuery(''); // Clear search query when sort changes
   };
 
   const loadMore = () => {
@@ -450,7 +463,7 @@ export default function SearchResourcesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold mb-6">Search Resources</h2>
-      <SearchBar onSearch={handleSearch} onSave={saveSearch} />
+      <SearchBar onSearch={handleSearch} onSave={saveSearch} initialValue={searchQuery} />
 
       <div className="flex flex-wrap justify-between items-center my-4">
         <div className="flex flex-wrap items-center space-x-2 mb-2">

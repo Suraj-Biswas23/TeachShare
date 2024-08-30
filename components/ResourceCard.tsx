@@ -171,14 +171,15 @@
   //   );
   // }
 
-  import React, { useState } from 'react';
-  import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaInfoCircle } from 'react-icons/fa';
+  import React, { useState, useEffect } from 'react';
+  import { FaDownload, FaEye, FaShare, FaStar, FaBookmark, FaInfoCircle, FaEdit } from 'react-icons/fa';
   import { format } from 'date-fns';
   import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
   import { Input } from "@/components/ui/input";
   import { Button } from "@/components/ui/button";
-  import { toast } from 'react-toastify'; // No longer importing ToastContainer
-  import 'react-toastify/dist/ReactToastify.css'; // Import the CSS for react-toastify
+  import { Textarea } from "@/components/ui/textarea";
+  import { toast } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
   
   interface Resource {
     _id: string;
@@ -190,14 +191,16 @@
     uploadDate: string;
     tags: string[];
     fileUrl: string;
-    views?: number;
-    downloads?: number;
-    shares?: number;
-    rating?: number;
-    reviews?: number;
-    bookmarks?: number;
+    views: number;
+    downloads: number;
+    shares: number;
+    rating: number;
+    reviews: number;
+    bookmarks: number;
     description?: string;
   }
+  
+  type InteractionType = 'views' | 'downloads' | 'shares' | 'bookmarks';
   
   interface ResourceCardProps {
     resource: Resource;
@@ -207,27 +210,143 @@
   }
   
   export default function ResourceCard({ 
-    resource, 
+    resource: initialResource, 
     onDownload, 
     onShare,
     onBookmark
   }: ResourceCardProps) {
+    const [resource, setResource] = useState<Resource>(initialResource);
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
     const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+    const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+    const [reviewRating, setReviewRating] = useState(0);
+    const [reviewText, setReviewText] = useState('');
+    const [hasUserReviewed, setHasUserReviewed] = useState(false);
   
-    const handleCopyLink = () => {
-      navigator.clipboard.writeText(resource.fileUrl);
+    useEffect(() => {
+      checkUserReview();
+    }, []);
+  
+    const checkUserReview = async () => {
+      try {
+        // Fetching the user's review status from your backend API
+        const response = await fetch(`/api/material/hasReviewed?materialId=${resource._id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setHasUserReviewed(data.hasReviewed); // Update state with the review status
+        } else {
+          toast.error('Failed to check review status.');
+        }
+      } catch (error) {
+        console.error('Error checking user review:', error);
+        toast.error('Error checking review status.');
+      }
+    };
+    
+  
+    const handleInteraction = async (interactionType: InteractionType) => {
+      try {
+        const response = await fetch('/api/material/interact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            materialId: resource._id,
+            interactionType
+          }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to record interaction');
+        }
+        const data = await response.json();
+        if (data.message === 'Interaction recorded successfully') {
+          setResource(prevResource => ({
+            ...prevResource,
+            [interactionType]: prevResource[interactionType] + 1
+          }));
+        } else {
+          // toast.info('You have already interacted with this resource.');
+        }
+      } catch (error) {
+        console.error('Error recording interaction:', error);
+        toast.error('Failed to record interaction');
+      }
     };
   
-    const handleBookmark = () => {
+    const handleDownload = async () => {
+      await handleInteraction('downloads');
+      onDownload(resource.fileUrl);
+    };
+  
+    const handleView = async () => {
+      await handleInteraction('views');
+      setIsInfoDialogOpen(true);
+    };
+  
+    const handleShare = async () => {
+      await handleInteraction('shares');
+      setIsShareDialogOpen(true);
+    };
+  
+    const handleBookmark = async () => {
+      await handleInteraction('bookmarks');
       if (typeof onBookmark === 'function') {
         onBookmark(resource._id);
-        // Removed the toast.success call
       } else {
         console.error('onBookmark is not a function');
       }
     };
-    
+  
+    const handleCopyLink = () => {
+      navigator.clipboard.writeText(resource.fileUrl);
+      toast.success('Link copied to clipboard');
+    };
+  
+    const handleReviewClick = () => {
+      if (hasUserReviewed) {
+        toast.info('You have already submitted a review for this resource.');
+      } else {
+        setIsReviewDialogOpen(true);
+      }
+    };
+  
+    const handleReviewSubmit = async () => {
+      try {
+        const response = await fetch('/api/material/review', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            materialId: resource._id,
+            rating: reviewRating,
+            text: reviewText
+          }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to submit review');
+        }
+        const data = await response.json();
+        if (data.message === 'Review submitted successfully') {
+          setResource(prevResource => ({
+            ...prevResource,
+            rating: data.newRating,
+            reviews: data.totalReviews
+          }));
+          setIsReviewDialogOpen(false);
+          setReviewRating(0);
+          setReviewText('');
+          setHasUserReviewed(true);
+          toast.success('Review submitted successfully');
+        } else {
+          toast.error(data.message || 'Failed to submit review');
+        }
+      } catch (error) {
+        console.error('Error submitting review:', error);
+        toast.error('Failed to submit review');
+      }
+    };
   
     return (
       <div className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 relative">
@@ -247,28 +366,28 @@
         </div>
         <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
           <span className="flex items-center">
-            <FaEye className="mr-1" /> {resource.views ?? 0}
+            <FaEye className="mr-1" /> {resource.views}
           </span>
           <span className="flex items-center">
-            <FaDownload className="mr-1" /> {resource.downloads ?? 0}
+            <FaDownload className="mr-1" /> {resource.downloads}
           </span>
           <span className="flex items-center">
-            <FaShare className="mr-1" /> {resource.shares ?? 0}
+            <FaShare className="mr-1" /> {resource.shares}
           </span>
           <span className="flex items-center">
-            <FaBookmark className="mr-1" /> {resource.bookmarks ?? 0}
+            <FaBookmark className="mr-1" /> {resource.bookmarks}
           </span>
         </div>
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <FaStar className="text-yellow-400 mr-1" />
             <span>
-              {resource.rating !== undefined ? resource.rating.toFixed(1) : '0'} 
-              ({resource.reviews ?? 0} reviews)
+              {resource.rating !== undefined ? resource.rating.toFixed(1) : '0.0'} 
+              ({resource.reviews} reviews)
             </span>
           </div>
           <button 
-            onClick={() => onDownload(resource.fileUrl)}
+            onClick={handleDownload}
             className="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600 transition-colors duration-200"
           >
             Download
@@ -277,7 +396,7 @@
   
         <div className="absolute top-2 right-2 flex space-x-2">
           <button 
-            onClick={() => setIsInfoDialogOpen(true)}
+            onClick={handleView}
             className="text-gray-500 hover:text-gray-700"
           >
             <FaInfoCircle />
@@ -289,10 +408,16 @@
             <FaBookmark />
           </button>
           <button 
-            onClick={() => setIsShareDialogOpen(true)}
+            onClick={handleShare}
             className="text-gray-500 hover:text-gray-700"
           >
             <FaShare />
+          </button>
+          <button 
+            onClick={handleReviewClick}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <FaEdit />
           </button>
         </div>
   
@@ -324,13 +449,32 @@
             </div>
           </DialogContent>
         </Dialog>
+  
+        <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Leave a Review</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <FaStar
+                    key={star}
+                    className={`cursor-pointer ${star <= reviewRating ? 'text-yellow-400' : 'text-gray-300'}`}
+                    onClick={() => setReviewRating(star)}
+                  />
+                ))}
+              </div>
+              <Textarea
+                placeholder="Write your review (optional)"
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+              />
+              <Button onClick={handleReviewSubmit}>Submit Review</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
-  
-  
-  
-  
-  
-  
   

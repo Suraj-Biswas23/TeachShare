@@ -31,6 +31,15 @@ interface PopularResource {
   fileType: string;
 }
 
+interface ActivityFeedItem {
+  _id: string;
+  title: string;
+  description: string;
+  uploadDate: string;
+  fileType: string;
+  uploaderName: string;
+}
+
 
 const RecentUploadItem: React.FC<RecentUpload> = ({ title, description, uploadDate, fileType }) => {
   const getFileIcon = (type: string) => {
@@ -72,6 +81,32 @@ const DashboardCard: React.FC<DashboardCardProps> = ({ title, children }) => (
   </div>
 );
 
+const ActivityFeedItem: React.FC<ActivityFeedItem> = ({ title, description, uploadDate, fileType, uploaderName }) => {
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
+      case 'docx': return <FileText className="h-5 w-5 text-blue-500" />;
+      case 'xlsx': return <FileText className="h-5 w-5 text-green-500" />;
+      case 'ppt': return <Image className="h-5 w-5 text-orange-500" />;
+      default: return <FileIcon className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  return (
+    <div className="flex items-start space-x-4 py-3 border-b last:border-b-0">
+      <div className="flex-shrink-0">{getFileIcon(fileType)}</div>
+      <div className="flex-grow">
+        <h4 className="text-sm font-medium">{title}</h4>
+        <p className="text-xs text-gray-500 truncate">{description}</p>
+        <p className="text-xs text-gray-400 mt-1">
+          Uploaded by {uploaderName} on {new Date(uploadDate).toLocaleDateString()}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+
 const PopularResourceItem: React.FC<PopularResource> = ({ title, description, bookmarks, downloads, fileType }) => {
   const getFileIcon = (type: string) => {
     switch (type) {
@@ -81,6 +116,8 @@ const PopularResourceItem: React.FC<PopularResource> = ({ title, description, bo
       default: return <FileIcon className="h-5 w-5 text-gray-500" />;
     }
   };
+
+  
   return (
     <div className="flex items-center space-x-4 py-2 border-b last:border-b-0">
       {getFileIcon(fileType)}
@@ -110,6 +147,8 @@ const DashboardContent: React.FC = () => {
 
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([]);
   const [popularResources, setPopularResources] = useState<PopularResource[]>([]);
+  const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
+
 
   const fetchStats = async () => {
     try {
@@ -147,7 +186,16 @@ const DashboardContent: React.FC = () => {
         console.error('Error fetching recent uploads:', error);
       }
     };
+    const fetchActivityFeed = async () => {
+      try {
+        const response = await axios.get('/api/material/activity-feed');
+        setActivityFeed(response.data);
+      } catch (error) {
+        console.error('Error fetching activity feed:', error);
+      }
+    };
 
+    fetchActivityFeed();
     fetchRecentUploads();
 
     // Set up an interval to fetch stats every 5s
@@ -155,6 +203,7 @@ const DashboardContent: React.FC = () => {
 
     // Clean up the interval on component unmount
     return () => clearInterval(intervalId);
+    
   }, []);
 
   return (
@@ -192,7 +241,15 @@ const DashboardContent: React.FC = () => {
       </div>
 
       <DashboardCard title="Activity Feed">
-        <p>Recent activity and notifications will appear here.</p>
+        <div className="h-64 overflow-y-auto pr-2">
+          {activityFeed.length > 0 ? (
+            activityFeed.map((item) => (
+              <ActivityFeedItem key={item._id} {...item} />
+            ))
+          ) : (
+            <p className="text-gray-500">No recent activity found.</p>
+          )}
+        </div>
       </DashboardCard>
     </div>
   );

@@ -8,7 +8,7 @@ import { FaLinkedin, FaTwitter } from 'react-icons/fa';
 
 const teamMembers = [
   { name: "Hrishabh Gautam", role: "CEO & Co-Founder", image: "/resume-pic.jpg", linkedin: "https://www.linkedin.com/in/hrishabh-gautam1625/", twitter: "https://x.com/hrishabhxgautam" },
-  { name: "Suraj Biswas", role: "COO & Co-Founder", image: "/aboutavatar2.jpg", linkedin: "#", twitter: "#" },
+  { name: "Suraj Biswas", role: "COO & Co-Founder", image: "/my-avatar.jpg", linkedin: "https://www.linkedin.com/in/suraj-biswas23/", twitter: "#" },
   // Add more team members as needed
 ];
 

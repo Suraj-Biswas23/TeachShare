@@ -4,6 +4,8 @@ import dbConnect from '@/utils/dbConnect';
 import { Review } from '@/model/Review';
 import { User } from '@/model/User';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();

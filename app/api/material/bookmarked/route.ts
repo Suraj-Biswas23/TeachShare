@@ -1,10 +1,10 @@
-// app/api/material/bookmarked/route.ts
-
 import { NextResponse, NextRequest } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
 import dbConnect from '@/utils/dbConnect';
 import { Bookmark } from '@/model/Bookmark';
 import { Material } from '@/model/Material';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,10 +14,8 @@ export async function GET(request: NextRequest) {
     }
 
     await dbConnect();
-
     const bookmarks = await Bookmark.find({ userId }).lean();
     const materialIds = bookmarks.map(bookmark => bookmark.materialId);
-
     const resources = await Material.find({ _id: { $in: materialIds } }).lean();
 
     return NextResponse.json({ resources });

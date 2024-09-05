@@ -1,8 +1,9 @@
-// api/material/hasReviewed/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
 import dbConnect from '@/utils/dbConnect';
 import { Review } from '@/model/Review';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,9 +1,9 @@
-// app/api/material/activity-feed/route.ts
-
 import { NextResponse, NextRequest } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
 import dbConnect from '@/utils/dbConnect';
 import { Material } from '@/model/Material';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

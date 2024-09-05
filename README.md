@@ -1,4 +1,4 @@
-This is a next.js project
+This Project is build using Next.js
 
 
 

@@ -1,14 +1,25 @@
-This Project is build using Next.js
+## Getting Started
 
+To run this project locally:
 
+1. **Clone the repository:**
+```bash
+https://github.com/Suraj-Biswas23/TeachShare.git
+```
+   
+2. **Navigate to the project directory:**
+```bash
+cd TeachShare
+```
 
-#Libraries Installed:
-1. npm install react-dropzone react-tag-input-component
-2. npm install react icons
-3. Used Shadcn components
-4. npx shadcn-ui@latest add toast
-5. npm install react-toastify
-6. npm install @reduxjs/toolkit react-redux axios react-toastify date-fns react-icons
-7. npm install react-icons date-fns react-toastify
-8. npm install date-fns
-9. npm install axios
+3. **Install dependencies:**
+```bash
+npm install
+```
+
+4. **Start the development server:**
+```bash
+npm run dev
+```
+
+Visit `http://localhost:3000` to view the website.
